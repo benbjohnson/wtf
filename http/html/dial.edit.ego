@@ -1,0 +1,66 @@
+<%
+package html
+
+import (
+	"github.com/benbjohnson/wtf"
+)
+
+type DialEditTemplate struct {
+	Dial *wtf.Dial
+	Err  error
+}
+
+// CancelURL returns the URL to use for the cancel button.
+func (tmpl *DialEditTemplate) CancelURL() string {
+	if id := tmpl.Dial.ID; id != 0 {
+		return fmt.Sprintf("/dials/%d", id)
+	}
+	return "/dials"
+}
+
+func (tmpl *DialEditTemplate) Render(ctx context.Context, w io.Writer) {
+	title := "Create Dial"
+	if tmpl.Dial.ID != 0 {
+		title = "Update Dial"
+	}
+
+%><ego:App Title=title>
+	<div class="content">
+		<form method="POST">
+			<% if tmpl.Dial.ID != 0 { %>
+				<input type="hidden" name="_method" value="PATCH"/>
+			<% } %>
+
+			<div class="card mb-3">
+				<div class="card-body">
+					<h3 class="mb-0">
+						<%= title %>
+					</h3>
+				</div>
+			</div>
+
+			<ego:Alert Err=tmpl.Err/>
+
+			<div class="card mb-3">
+				<div class="card-body bg-light">
+					<div class="row">
+						<div class="col mb-3">
+							<label class="form-label" for="name">Dial Name</label>
+							<input class="form-control" type="text" id="name" name="name" value="<%= tmpl.Dial.Name %>" autofocus maxlength="<%= wtf.MaxDialNameLen %>"/>
+						</div>
+					</div>
+				</div>
+
+				<div class="card-footer">
+					<div class="row justify-content-end">
+						<div class="col-auto align-items-flex-end">
+							<input type="submit" class="btn btn-primary mr-1" role="button" value="Save"/>
+							<a href="<%= tmpl.CancelURL() %>" class="btn btn-falcon-default" role="button">Cancel</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</ego:App>
+<% } %>

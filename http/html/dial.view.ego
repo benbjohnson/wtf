@@ -1,0 +1,298 @@
+<%
+package html
+
+import (
+	"github.com/benbjohnson/wtf"
+)
+
+type DialViewTemplate struct {
+	Dial      *wtf.Dial
+	InviteURL string
+}
+
+func (tmpl *DialViewTemplate) Render(ctx context.Context, w io.Writer) {
+	isOwner := tmpl.Dial.UserID == wtf.UserIDFromContext(ctx) 
+	selfMembership := tmpl.Dial.MembershipByUserID(wtf.UserIDFromContext(ctx))
+%><ego:App Title=(tmpl.Dial.Name + " Dial")>
+	<div class="content">
+		<div class="card mb-3">
+			<div class="card-body">
+				<div class="row align-items-center">
+					<div class="col">
+						<div>
+							<h2 class="mb-0">
+								<span class="dial-name">
+									<%= tmpl.Dial.Name %>
+								</span>
+
+								<% if wtf.CanEditDial(ctx, tmpl.Dial) { %>
+									<a href="/dials/<%= tmpl.Dial.ID %>/edit">
+										<span class="fas fa-edit fs--1 mr-1" aria-hidden="true"></span>
+									</a>
+								<% } %>
+							</h2>
+						</div>
+					</div>
+
+					<% if isOwner { %>
+						<div class="col-auto">
+							<button class="btn btn-primary mr-1 mb-1" type="button" data-toggle="modal" data-target="#invite-modal">
+								Invite
+							</button>
+
+							<button class="btn btn-danger mr-1 mb-1" form="deleteDialForm" onclick="deleteDialButton_onClick(event)">
+								<span class="fas fa-trash mr-1"></span>
+								Delete
+							</button>
+						</div>
+					<% } %>
+				</div>
+			</div>
+		</div>
+
+		<ego:Flash/>
+
+		<div class="row mb-3">
+			<div class="col-md-8">
+				<div class="card h-100">
+					<div class="card-header bg-light">
+						<h5>Overall WTF Level</h5>
+					</div>
+
+					<div class="card-body">
+						<canvas id="chart"></canvas>
+						<div id="chartValue" class="h1" style="text-align:center; margin-top:-2em; margin-bottom:1em">
+							<%= tmpl.Dial.Value %>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-4">
+				<div class="card h-100">
+					<div class="card-header bg-light">
+						<h5>Members</h5>
+					</div>
+
+
+					<div class="card-body px-0 py-0">
+						<div class="table-responsive scrollbar">
+							<table class="table table-sm fs--1 mb-0">
+								<thead class="bg-200 text-900">
+									<tr>
+										<th class="sort pr-1 align-middle white-space-nowrap" data-sort="name">
+											Name
+										</th>
+
+										<th class="sort pr-1 align-middle white-space-nowrap" data-sort="value">
+											WTF Level
+										</th>
+
+										<th class="no-sort pr-1 align-middle data-table-row-action"></th>
+									</tr>
+								</thead>
+
+
+								<tbody class="list">
+									<% for _, membership := range tmpl.Dial.Memberships { %>
+										<tr>
+											<th class="align-middle white-space-nowrap">
+												<%= membership.User.Name %>
+											</th>
+
+											<td class="align-middle fs-0 white-space-nowrap">
+												<ego:WTFBadge DialMembershipID=membership.ID Value=membership.Value/>
+											</td>
+
+											<td class="align-middle white-space-nowrap">
+												<% if wtf.CanDeleteDialMembership(ctx, membership) { %>
+													<button class="btn btn-link text-600 btn-sm" type="button"
+														data-dial-id="<%= tmpl.Dial.ID %>"
+														data-dial-membership-id="<%= membership.ID %>"
+														data-name="<%= membership.User.Name %>"
+														onclick="deleteDialMembershipButton_onClick(event)"
+													>
+														<i class="fas fa-trash"></i>
+													</button>
+												<% } %>
+											</td>
+										</tr>
+									<% } %>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="card mb-3">
+			<div class="card-header bg-light">
+				<div class="row flex-between-center">
+					<div class="col-6 col-sm-auto">
+						<h5 class="mb-0 py-2 py-xl-0">Set Your WTF Level</h5>
+					</div>
+				</div>
+			</div>
+
+
+			<div class="card-body">
+				<form>
+					<input id="valueInput" type="range" class="form-control-range w-100" value="<%= selfMembership.Value %>" onchange="valueInput_onChange(event)" />
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<form id="deleteDialMembershipForm" method="POST">
+		<input type="hidden" name="_method" value="DELETE"/>
+	</form>
+
+	<% if isOwner { %>
+		<div class="modal fade" id="invite-modal" tabindex="-1" role="dialog" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered" role="document" style="max-width: 500px">
+				<div class="modal-content position-relative">
+					<div class="position-absolute top-0 right-0 mt-2 mr-2 z-index-1">
+						<button class="btn-close btn btn-sm btn-circle d-flex flex-center transition-base" data-dismiss="modal" aria-label="Close"></button>
+					</div>
+
+					<div class="modal-body p-0">
+						<div class="rounded-top-lg py-3 pl-4 pr-6 bg-light">
+							<h4 class="mb-1">Invite new member</h4>
+						</div>
+
+						<div class="p-4 pb-0">
+							Send the link to invite people to contribute to your dial.
+						</div>
+
+						<div class="p-4">
+							<form class="row">
+								<div class="col">
+									<input id="inviteURLInput" class="form-control" type="text" value="<%= tmpl.InviteURL %>" onclick="copyInviteURL()" />
+								</div>
+								<div class="col-auto">
+									<button id="copyInviteURLButton" class="btn btn-primary" type="button" onclick="copyInviteURL()">Copy</button>
+								</div>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	<% } %>
+
+	<form id="deleteDialForm" action="/dials/<%= tmpl.Dial.ID %>" method="POST">
+		<input type="hidden" name="_method" value="DELETE"/>
+	</form>
+
+	<ego::Footer>
+		<script>
+			var selfMembershipID = <%= selfMembership.ID %>
+
+			var chart = document.getElementById('chart');
+			var ctx = chart.getContext('2d');
+
+			chart.chart = new Chart(ctx, {
+				type: 'doughnut',
+				data: {
+					datasets: [{
+						label: 'WTF Level',
+						data: [<%= tmpl.Dial.Value %>, <%= 100-tmpl.Dial.Value %>],
+						backgroundColor: ['#2c7be5', 'rgba(0,0,0,0.05)'],
+					}],
+					labels: ['WTF Level'],
+				},
+				options: {
+					responsive: true,
+					legend: {
+						display: false,
+					},
+					tooltips: {
+						enabled: false,
+					},
+					animation: {
+						animateScale: false,
+						animateRotate: false,
+						onProgress: (animation) => {
+							const prevValue = chart.prevValue
+							if (prevValue === undefined) {
+								return
+							}
+							const chartValue = document.getElementById('chartValue');
+							const newValue = chart.chart.data.datasets[0].data[0];
+							chartValue.innerText = Math.round(prevValue + ((newValue-prevValue) * (animation.currentStep / animation.numSteps)))
+						},
+						onComplete: (animation) => {
+							chart.prevValue = undefined
+							const newValue = chart.chart.data.datasets[0].data[0];
+							document.getElementById('chartValue').innerText = newValue;
+						},
+					},
+					circumference: Math.PI,
+					rotation: -Math.PI,
+				},
+			});
+
+			// Enable animation for rotation after initial draw.
+			chart.chart.config.options.animation.animateRotate = true
+
+			function ondialvaluechanged(payload) {
+				chart.prevValue = chart.chart.data.datasets[0].data[0]
+				chart.chart.data.datasets[0].data = [payload.value, 100-payload.value];
+				chart.chart.update();
+			}
+
+			function valueInput_onChange(event) {
+				const input = event.currentTarget
+
+				fetch('/dial-memberships/' + selfMembershipID, {
+					method: 'PATCH',
+					headers: {
+						'Accept': 'application/json',
+						'Content-type': 'application/json',
+					},
+					body: JSON.stringify({
+						value:parseInt(input.value),
+					}),
+				})
+				.then(response => {
+					if (!response.ok) {
+						throw new Error(response.json().error)
+					}
+					return response.json()
+				})
+				.catch(error => console.log(error))
+			}
+
+			function copyInviteURL() {
+				const input = document.getElementById('inviteURLInput')
+				const button = document.getElementById('copyInviteURLButton')
+				input.select()
+				document.execCommand('copy')
+				button.innerText = 'Copied!'
+			}
+
+			function deleteDialButton_onClick(event) {
+				if (!confirm("Are you sure you want to permanently delete this dial?")) {
+					event.preventDefault()
+				}
+			}
+
+			function deleteDialMembershipButton_onClick(event) {
+				var target = event.currentTarget
+				var dialMembershipID = parseInt(target.getAttribute("data-dial-membership-id"))
+				var name = target.getAttribute("data-name")
+				
+				if (confirm("Are you sure you want to remove " + name + " from the dial?")) {
+					var form = document.getElementById("deleteDialMembershipForm")
+					form.setAttribute("action", "/dial-memberships/" + dialMembershipID)
+					form.submit()
+				}
+			}
+
+			// Connect to websockets.
+			connect()
+		</script>
+	</ego::Footer>
+</ego:App>
+<% } %>

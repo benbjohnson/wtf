@@ -1,0 +1,129 @@
+<%
+package html
+
+import (
+	"net/url"
+
+	"github.com/benbjohnson/wtf"
+	"github.com/dustin/go-humanize"
+)
+
+type DialIndexTemplate struct {
+	Dials []*wtf.Dial
+	N     int
+	Filter wtf.DialFilter
+	URL   url.URL
+}
+
+func (tmpl *DialIndexTemplate) Render(ctx context.Context, w io.Writer) {
+%><ego:App Title="Your Dials">
+	<div class="content">
+		<div class="card mb-3">
+			<div class="card-body">
+				<h3>My Dials</h3>
+
+				<p class="mb-0">
+					<p>
+						Dials can be created and shared to monitor the <em>"what the f**k"</em> level of a team of people.
+					</p>
+
+					<% if len(tmpl.Dials) == 0 { %>
+						<a href="/dials/new" class="btn btn-primary btn-new-dial" role="button">
+							<span class="fas fa-plus mr-1"></span>
+							Create a new Dial
+						</a>
+					<% } %>
+				</p>
+			</div>
+		</div>
+
+		<ego:Flash/>
+
+		<% if len(tmpl.Dials) > 0 { %>
+			<div class="card mb-3">
+				<div class="card-header bg-light">
+					<div class="row flex-between-center">
+						<div class="col-6 col-sm-auto">
+							<h5 class="mb-0 py-2 py-xl-0">Dials</h5>
+						</div>
+
+						<div class="col-6 col-sm-auto ml-auto text-right pl-0">
+							<a href="/dials/new" class="btn btn-falcon-default btn-sm btn-new-dial" role="button">
+								<span class="fas fa-plus mr-1"></span> New
+							</a>
+
+							<a href="/dials.csv" target="_blank" class="btn btn-falcon-default btn-sm" type="button">
+								<span class="fas fa-external-link-alt mr-1"></span> Export
+							</a>
+						</div>
+					</div>
+				</div>
+
+
+				<div class="card-body px-0 py-0">
+					<div class="table-responsive scrollbar">
+						<table class="table table-sm table-dials fs--1 mb-0">
+							<thead class="bg-200 text-900">
+								<tr>
+									<th class="sort pr-1 align-middle white-space-nowrap" data-sort="name">
+										Name
+									</th>
+
+									<th class="sort pr-1 align-middle white-space-nowrap" data-sort="user.name">
+										Created by
+									</th>
+
+									<th class="sort pr-1 align-middle white-space-nowrap" data-sort="value">
+										WTF Level
+									</th>
+
+									<th class="sort pr-1 align-middle white-space-nowrap" data-sort="updated_at">
+										Last Updated
+									</th>
+								</tr>
+							</thead>
+
+
+							<tbody class="list">
+								<% for _, dial := range tmpl.Dials { %>
+									<tr>
+										<th class="align-middle white-space-nowrap dial-name">
+											<a href="/dials/<%= dial.ID %>">
+												<%= dial.Name %>
+											</a>
+										</th>
+
+										<td class="align-middle white-space-nowrap dial-user-name">
+											<%= dial.User.Name %>
+										</td>
+
+										<td class="align-middle fs-0 white-space-nowrap dial-value">
+											<span class="badge badge rounded-pill badge-soft-success">
+												<%= dial.Value %>
+											</span>
+										</td>
+
+										<td class="align-middle white-space-nowrap">
+											<%= humanize.Time(dial.UpdatedAt) %>
+										</td>
+									</tr>
+								<% } %>
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+
+				<div class="card-footer">
+					<ego:Pagination
+						URL=tmpl.URL
+						Limit=tmpl.Filter.Limit
+						Offset=tmpl.Filter.Offset
+						N=tmpl.N
+					/>
+				</div>
+			</div>
+		<% } %>
+	</div>
+</ego:App>
+<% } %>

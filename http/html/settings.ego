@@ -1,0 +1,34 @@
+<%
+package html
+
+import (
+	"github.com/benbjohnson/wtf"
+)
+
+type SettingsTemplate struct {}
+
+func (tmpl *SettingsTemplate) Render(ctx context.Context, w io.Writer) {
+	user := wtf.UserFromContext(ctx)
+%><ego:App>
+	<div class="content">
+		<div class="card mb-3">
+			<div class="card-body">
+				<h3 class="mb-0">
+					Settings
+				</h3>
+			</div>
+		</div>
+
+		<div class="card mb-3">
+			<div class="card-body bg-light">
+				<div class="row">
+					<div class="col mb-3">
+						<label class="form-label" for="api_key">API Key</label>
+						<input class="form-control" type="text" id="api_key" name="api_key" value="<%= user.APIKey %>" readonly/>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</ego:App>
+<% } %>

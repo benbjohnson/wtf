@@ -1,0 +1,41 @@
+<%
+package html
+
+type LoginTemplate struct {}
+
+func (tmpl *LoginTemplate) Render(ctx context.Context, w io.Writer) {
+%><ego:App Title="Log in" Chromeless>
+<main class="main" id="top">
+	<div class="container" data-layout="container">
+		<div class="row flex-center py-6">
+			<div class="col-sm-10 col-md-8 col-lg-6 col-xl-5 col-xxl-4">
+				<a class="d-flex flex-center mb-4" href="/">
+					<span class="font-sans-serif font-weight-bolder fs-5 d-inline-block">
+						WTF Dial
+					</span>
+				</a>
+
+				<div class="card">
+					<div class="card-body p-4 pt-2 p-sm-5 pt-sm-3">
+						<div class="position-relative mt-4">
+							<hr class="bg-300">
+							<div class="position-absolute top-50 left-50 translate-middle px-3 bg-white font-sans-serif fs--1 text-500 text-nowrap">
+								Log in with
+							</div>
+						</div>
+						<div class="row g-2 mt-2">
+							<div class="col">
+								<a class="btn btn-outline-dark btn-block" href="/oauth/github">
+									<i class="fab fa-github mr-1"></i>
+									GitHub
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</main>
+</ego:App>
+<% } %>

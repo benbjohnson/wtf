@@ -1,0 +1,194 @@
+<%
+package html
+
+import (
+	"github.com/benbjohnson/wtf"
+	"github.com/dustin/go-humanize"
+)
+
+type IndexTemplate struct {
+	// List of all dials user owns or is a member of.
+	Dials []*wtf.Dial
+	
+	// Most recently updated memberships.
+	Memberships []*wtf.DialMembership
+	
+	// Historical average WTF values across all dials.
+	AverageDialValueReport *wtf.DialValueReport
+}
+
+func (tmpl *IndexTemplate) Render(ctx context.Context, w io.Writer) {
+%><ego:App>
+	<div class="content">
+		<div class="card mb-3 h-100 bg-line-chart-gradient">
+			<div class="card-body rounded-lg text-white fs--1">
+				<h4 class="text-white mb-0">Average WTF Level</h4>
+				<p class="text-white font-weight-semi-bold">Last Hour</p>
+				<canvas id="avgDialChart" class="max-w-100 chartjs-render-monitor" width="642" height="256" style="display: block; height: 128px; width: 321px;"></canvas>
+			</div>
+		</div>
+
+		<% if len(tmpl.Dials) > 0 { %>
+			<div class="row g-3">
+				<% for _, dial := range tmpl.Dials { %>
+					<%
+					className := "col"
+					if len(tmpl.Dials) > 2 {
+						className = "col-sm-6 col-md-4"
+					}
+					%>
+
+					<div class="<%= className %>">
+						<div class="card mb-3 overflow-hidden" style="min-width: 12rem">
+							<div class="card-body position-relative">
+								<h6><%= dial.Name %></h6>
+
+								<div class="display-4 fs-4 font-weight-normal font-sans-serif" data-dial-id="<%= dial.ID %>">
+									<%= dial.Value %>
+								</div>
+							</div>
+
+							<div class="card-footer bg-light">
+								<a class="font-weight-semi-bold fs--1 text-nowrap" href="/dials/<%= dial.ID %>">
+									View Dial
+									<span class="fas fa-angle-right ml-1" data-fa-transform="down-1"></span>
+								</a>
+							</div>
+						</div>
+					</div>
+				<% } %>
+			</div>
+		<% } %>
+
+		<div class="card mb-3">
+			<div class="card-header">
+				<h5 class="fs-0 mb-0 text-nowrap py-2 py-xl-0">Recently Updated Dials</h5>
+			</div>
+
+			<div class="card-body px-0 py-0">
+				<div class="table-responsive scrollbar">
+					<table class="table fs--1">
+						<thead class="bg-200 text-900">
+							<tr>
+								<th class="pr-1 align-middle white-space-nowrap">Member</th>
+
+								<th class="pr-1 align-middle white-space-nowrap">Dial</th>
+
+								<th class="pr-1 align-middle white-space-nowrap text-center">WTF Level</th>
+
+								<th class="pr-1 align-middle white-space-nowrap text-center">Last Updated</th>
+							</tr>
+						</thead>
+
+
+						<tbody class="list">
+							<% for _, membership := range tmpl.Memberships { %>
+								<tr>
+									<th class="align-middle white-space-nowrap">
+										<%= membership.User.Name %>
+									</th>
+
+									<td class="align-middle white-space-nowrap">
+										<a href="/dials/<%= membership.Dial.ID %>">
+											<%= membership.Dial.Name %>
+										</a>
+									</td>
+
+									<td class="align-middle text-center fs-0 white-space-nowrap">
+										<ego:WTFBadge DialMembershipID=membership.ID Value=membership.Value/>
+									</td>
+
+									<td class="align-middle text-center white-space-nowrap">
+										<%= humanize.Time(membership.Dial.UpdatedAt) %>
+									</td>
+								</tr>
+							<% } %>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<ego::Footer>
+		<script>
+			var avgDialValues = <% marshalJSONTo(w, tmpl.AverageDialValueReport.Records) %>;
+			avgDialValues = avgDialValues.map((v) => { return {t:new Date(v.timestamp), y:v.value} });
+
+			function initAvgDialChart() {
+				var color = Chart.helpers.color;
+
+				var chart = document.getElementById('avgDialChart');
+				var ctx = chart.getContext('2d');
+
+				var fill = ctx.createLinearGradient(0, 0, 0, 250);
+				fill.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+				fill.addColorStop(1, 'rgba(255, 255, 255, 0)');
+
+				var tickFontColor = color('rgb(255,255,255)').alpha(0.7).rgbaString();
+				var gridLineColor = color('rgb(255,255,255)').alpha(0.1).rgbaString()
+
+				chart.chart = new Chart(ctx, {
+					type: 'line',
+					data: {
+						datasets: [{
+							label: 'WTF Level',
+							pointRadius: 2,
+							borderWidth: 2,
+							borderColor: color('rgb(255,255,255)').rgbaString(),
+							pointBackgroundColor: color('rgb(255,255,255)').rgbaString(),
+							backgroundColor: fill,
+							lineTension: 0,
+							data: avgDialValues,
+						}]
+					},
+					options: {
+						animation: {
+							duration: 0
+						},
+						legend: {
+							display: false
+						},
+						scales: {
+							xAxes: [{
+								type: "time",
+								ticks: {
+									source: 'data',
+									autoSkip: true,
+									autoSkipPadding: 75,
+									fontColor: tickFontColor,
+									fontStyle: 600,
+								},
+								gridLines: {
+									color: gridLineColor,
+									zeroLineColor: gridLineColor,
+									lineWidth: 1,
+								}
+							}],
+							yAxes: [{
+								display: true,
+								ticks: {
+									min: 0,
+									max: 100,
+									fontColor: tickFontColor,
+									fontStyle: 600,
+								},
+								gridLines: {
+									color: gridLineColor,
+									zeroLineColor: gridLineColor,
+									lineWidth: 1,
+								}
+							}],
+						}
+					}
+				});
+			}
+
+			initAvgDialChart();
+
+			// Connect to websockets.
+			connect()
+		</script>
+	</ego::Footer>
+</ego:App>
+<% } %>

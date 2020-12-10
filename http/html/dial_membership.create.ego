@@ -1,0 +1,39 @@
+<%
+package html
+
+import (
+	"github.com/benbjohnson/wtf"
+)
+
+type DialMembershipCreateTemplate struct {
+	Dial *wtf.Dial
+}
+
+func (tmpl *DialMembershipCreateTemplate) Render(ctx context.Context, w io.Writer) {
+%><ego:App>
+	<div class="content">
+		<form method="POST">
+			<div class="card mb-3">
+				<div class="card-body">
+					<h3>
+						Invitation
+					</h3>
+
+					<p>
+						You've been invited to contribute to the <strong><%= tmpl.Dial.Name %></strong> dial.
+						If you accept, you'll be able to update a WTF level to contribute to the overall WTF level of the dial.
+					</p>
+				</div>
+
+				<div class="card-footer">
+					<div class="row justify-content-end">
+						<div class="col-auto align-items-flex-end">
+							<input type="submit" class="btn btn-primary" role="button" value="Accept Invitation"/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
+</ego:App>
+<% } %>

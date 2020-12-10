@@ -1,0 +1,44 @@
+<%
+package html
+
+type ErrorTemplate struct {
+	StatusCode int
+	Header     string
+	Message    string
+}
+
+func (tmpl *ErrorTemplate) Render(ctx context.Context, w io.Writer) {
+%><ego:App Chromeless>
+
+<main class="main" id="top">
+	<div class="container" data-layout="container">
+		<div class="row flex-center min-vh-100 py-6 text-center">
+			<div class="col-sm-10 col-md-8 col-lg-6 col-xxl-5">
+				<a class="d-flex flex-center mb-4" href="../../index.html">
+					<span class="font-sans-serif font-weight-bolder fs-5 d-inline-block">WTF Dial</span>
+				</a>
+
+				<div class="card">
+					<div class="card-body p-4 p-sm-5">
+						<div class="font-weight-black lh-1 text-300 fs-error">
+							<%= tmpl.StatusCode %>
+						</div>
+
+						<p class="lead mt-4 text-800 font-sans-serif font-weight-semi-bold">
+							<%= tmpl.Header %>
+						</p>
+
+						<hr />
+
+						<p>
+							<%= tmpl.Message %>
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</main>
+
+</ego:App>
+<% } %>
