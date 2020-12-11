@@ -82,7 +82,7 @@ func (r *Pagination) Render(ctx context.Context, w io.Writer) {
 	fmt.Fprintf(w, `<li class="page-item"><a class="page-link" href="%s">Previous</a></li>`, r.pageURL(current-1))
 
 	// Print a button for each page number.
-	for page := current; page <= pageN; page++ {
+	for page := 1; page <= pageN; page++ {
 		className := ""
 		if page == current {
 			className = " active"
@@ -97,6 +97,14 @@ func (r *Pagination) Render(ctx context.Context, w io.Writer) {
 }
 
 func (r *Pagination) pageURL(page int) string {
+	// Ensure page number is within min/max.
+	pageN := ((r.N - 1) / r.Limit) + 1
+	if page < 1 {
+		page = 1
+	} else if page > pageN {
+		page = pageN
+	}
+
 	q := r.URL.Query()
 	q.Set("offset", fmt.Sprint((page-1)*r.Limit))
 	u := url.URL{Path: r.URL.Path, RawQuery: q.Encode()}

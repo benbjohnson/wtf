@@ -53,7 +53,8 @@ func (s *Server) handleDialIndex(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	default:
-		// TODO: Dial pagination
+		filter.Offset, _ = strconv.Atoi(r.URL.Query().Get("offset"))
+		filter.Limit = 20
 	}
 
 	// Fetch dials from database.

@@ -151,6 +151,38 @@ $ $GOPATH/bin/wtfd
 ```
 
 
+### Storybook
+
+The `wtf-storybook` binary allows you to test UI views with prepopulated data.
+This can make it easier to quickly test certain scenarios without needing to 
+set up your backend database.
+
+To run storybook, simply build it and run it:
+
+```sh
+$ go install ./cmd/wtf-storybook
+$ wtf-storybook
+Listening on http://localhost:3001
+```
+
+To add a new view, add an entry to the `routes` variable:
+
+```go
+var routes = []*Route{
+	// Show dial listing when user has no dials.
+	{
+		Name: "Dial listing with data",
+		Path: "/dials-with-no-data",
+		Renderer: &html.DialIndexTemplate{
+			Dials: []*wtf.Dial{},
+		},
+	},
+}
+```
+
+Then navigate to https://localhost:3001 and you'll see it displayed in the list.
+
+
 ### SQLite
 
 By default, the SQLite tests run against in-memory databases. However, you can

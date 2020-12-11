@@ -24,7 +24,7 @@ func (tmpl *DialIndexTemplate) Render(ctx context.Context, w io.Writer) {
 
 				<p class="mb-0">
 					<p>
-						Dials can be created and shared to monitor the <em>"what the f**k"</em> level of a team of people.
+						Dials can be created and shared to monitor the <em>"what the f**k"</em> level of a team.
 					</p>
 
 					<% if len(tmpl.Dials) == 0 { %>
