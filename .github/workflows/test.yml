@@ -1,0 +1,23 @@
+on: [push, pull_request]
+name: test
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go (tip)
+      run: |
+        git clone --depth=1 https://go.googlesource.com/go $HOME/gotip
+        cd $HOME/gotip/src
+        ./make.bash
+        echo "GOROOT=$HOME/gotip" >> $GITHUB_ENV
+        echo "$HOME/go/bin" >> $GITHUB_PATH
+        echo "$HOME/gotip/bin" >> $GITHUB_PATH
+
+    - name: Install ego
+      run: go install github.com/benbjohnson/ego/cmd/ego@latest
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Unit tests
+      run: make && go test ./...
