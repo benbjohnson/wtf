@@ -1,7 +1,5 @@
 .DS_Store
 *.test
 *.ego.go
-/http/assets/css/falcon.css
 /http/assets/css/theme.css
-/http/assets/css/theme.css.map
 /node_modules
