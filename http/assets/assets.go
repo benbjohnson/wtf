@@ -1,8 +1,14 @@
 package assets
 
-import "embed"
+import (
+	"embed"
+
+	"github.com/benbjohnson/hashfs"
+)
 
 //go:embed css/*.css
 //go:embed scripts/*.js
 //go:embed fonts
-var FS embed.FS
+var fsys embed.FS
+
+var FS = hashfs.NewFS(fsys)

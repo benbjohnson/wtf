@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/benbjohnson/hashfs"
 	"github.com/benbjohnson/wtf"
 	"github.com/benbjohnson/wtf/http/assets"
 	"github.com/benbjohnson/wtf/http/html"
@@ -73,7 +74,7 @@ func NewServer() *Server {
 
 	// Handle embedded asset serving. This serves files embedded from http/assets.
 	s.router.PathPrefix("/assets/").
-		Handler(http.StripPrefix("/assets/", http.FileServer(http.FS(assets.FS))))
+		Handler(http.StripPrefix("/assets/", hashfs.FileServer(assets.FS)))
 
 	// Setup a base router that excludes asset handling.
 	router := s.router.PathPrefix("/").Subrouter()
