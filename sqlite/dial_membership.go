@@ -246,8 +246,6 @@ func createDialMembership(ctx context.Context, tx *Tx, membership *wtf.DialMembe
 		return err
 	}
 
-	// TODO: Check if user already has a membership.
-
 	// Execute query to insert membership.
 	result, err := tx.ExecContext(ctx, `
 		INSERT INTO dial_memberships (
