@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"io/fs"
 	"net/url"
 
 	"github.com/benbjohnson/wtf"
+	"github.com/benbjohnson/wtf/http/assets"
 )
 
 // Alert displays an error message.
@@ -119,20 +121,25 @@ type WTFBadge struct {
 }
 
 func (r *WTFBadge) Render(ctx context.Context, w io.Writer) {
+	prefix := "bg-"
+	if HasTheme {
+		prefix = "badge-soft-"
+	}
+
 	var class string
 	switch {
 	case r.Value < 25:
-		class = "badge-soft-success"
+		class = prefix + "success"
 	case r.Value < 50:
-		class = "badge-soft-info"
+		class = prefix + "info"
 	case r.Value < 75:
-		class = "badge-soft-warning"
+		class = prefix + "warning"
 	default:
-		class = "badge-soft-danger"
+		class = prefix + "danger"
 	}
 
 	fmt.Fprintf(w, `<span`)
-	fmt.Fprintf(w, ` class="wtf-badge wtf-value badge badge rounded-pill %s"`, class)
+	fmt.Fprintf(w, ` class="wtf-badge wtf-value badge rounded-pill %s"`, class)
 	if r.DialID != 0 {
 		fmt.Fprintf(w, ` data-dial-id="%d"`, r.DialID)
 	}
@@ -148,4 +155,13 @@ func (r *WTFBadge) Render(ctx context.Context, w io.Writer) {
 
 func marshalJSONTo(w io.Writer, v interface{}) {
 	json.NewEncoder(w).Encode(v)
+}
+
+const ThemePath = "css/theme.css"
+
+var HasTheme bool
+
+func init() {
+	_, err := fs.Stat(assets.FS, ThemePath)
+	HasTheme = (err == nil)
 }

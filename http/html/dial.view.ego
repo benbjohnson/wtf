@@ -36,13 +36,9 @@ func (tmpl *DialViewTemplate) Render(ctx context.Context, w io.Writer) {
 
 					<% if isOwner { %>
 						<div class="col-auto">
-							<button class="btn btn-primary mr-1 mb-1" type="button" data-toggle="modal" data-target="#invite-modal">
-								Invite
-							</button>
-
-							<button class="btn btn-danger mr-1 mb-1" form="deleteDialForm" onclick="deleteDialButton_onClick(event)">
+							<button class="btn btn-outline-danger mb-1" form="deleteDialForm" onclick="deleteDialButton_onClick(event)">
 								<span class="fas fa-trash mr-1"></span>
-								Delete
+								Delete Dial
 							</button>
 						</div>
 					<% } %>
@@ -71,7 +67,16 @@ func (tmpl *DialViewTemplate) Render(ctx context.Context, w io.Writer) {
 			<div class="col-md-4">
 				<div class="card h-100">
 					<div class="card-header bg-light">
-						<h5>Members</h5>
+						<div class="row align-items-center">
+							<div class="col">
+								<h5>Members</h5>
+							</div>
+							<div class="col-auto">
+								<button class="btn btn-primary mr-1 mb-1" type="button" data-toggle="modal" data-target="#invite-modal">
+									Invite
+								</button>
+							</div>
+						</div>
 					</div>
 
 

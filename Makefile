@@ -8,4 +8,7 @@ generate: http/html/*.ego
 clean:
 	@rm http/html/*.ego.go
 
-.PHONY: default generate clean
+remove-theme:
+	@rm http/assets/css/theme.css
+
+.PHONY: default generate clean remove-theme
