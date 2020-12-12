@@ -1,0 +1,37 @@
+on: workflow_dispatch
+#  release:
+#    types:
+#      - created
+name: deploy
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go (tip)
+      run: |
+        git clone --depth=1 https://go.googlesource.com/go $HOME/gotip
+        cd $HOME/gotip/src
+        ./make.bash
+        echo "GOROOT=$HOME/gotip" >> $GITHUB_ENV
+        echo "$HOME/go/bin" >> $GITHUB_PATH
+        echo "$HOME/gotip/bin" >> $GITHUB_PATH
+
+    - name: Install ego
+      run: go install github.com/benbjohnson/ego/cmd/ego@latest
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Build wtfd
+      run: mkdir dist && make && go build -o dist/wtfd ./cmd/wtfd
+
+    - name: Copy file to server
+      uses: appleboy/scp-action@master
+      with:
+        host: wtfdial.com
+        username: deploy
+        key: ${{ secrets.SSH_KEY }}
+        source: "dist/wtfd"
+        target: "dist"
+        strip_components: 1
+        rm: true
