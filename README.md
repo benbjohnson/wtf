@@ -124,7 +124,7 @@ $ go install ./cmd/...
 The `wtfd` server uses GitHub for authentication so you'll need to [create a 
 new GitHub OAuth App](https://github.com/settings/applications/new).
 
-Next, you'll need to setup a configuration file in `~/wtfd.config`:
+Next, you'll need to setup a configuration file in `~/wtfd.conf`:
 
 ```toml
 [github]

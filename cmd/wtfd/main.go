@@ -199,7 +199,7 @@ func (m *Main) Run(ctx context.Context) (err error) {
 
 const (
 	// DefaultConfigPath is the default path to the application configuration.
-	DefaultConfigPath = "~/wtfd.config"
+	DefaultConfigPath = "~/wtfd.conf"
 
 	// DefaultDSN is the default datasource name.
 	DefaultDSN = "~/.wtfd/db"

@@ -28,13 +28,27 @@ jobs:
         make
         go build -ldflags "-X main.version ${{ GITHUB_REF }} -X main.commit ${{ GITHUB_SHA }}" -o dist/wtfd ./cmd/wtfd
 
+    - name: Generate wtfd.conf
+      run: |
+        cat <<EOF > dist/wtfd.conf
+        [github]
+        client-id     = "${{ secrets.GH_CLIENT_ID }}"
+        client-secret = "{{ secrets.GH_CLIENT_SECRET }}"
+        
+        [http]
+        addr      = ":3000"
+        block-key = "{{ secrets.BLOCK_KEY }}"
+        hash-key  = "{{ secrets.HASH_KEY }}"
+        EOF
+
     - name: Copy file to server
       uses: appleboy/scp-action@master
       with:
         host: wtfdial.com
         username: deploy
         key: ${{ secrets.SSH_KEY }}
-        source: "dist/wtfd"
+        source: "dist/wtfd,dist/wtfd.conf"
         target: "dist"
         strip_components: 1
         rm: true
+

@@ -4,7 +4,7 @@
 rm -rf wtf
 tar zxvf wtfd.tar.gz
 
-s# Copy configuration & credentials.
+# Copy configuration & credentials.
 chown wtf:wtf wtf/wtfd.conf && chmod 0644 wtf/wtfd.conf && cp wtf/wtfd.conf /etc/wtf/
 
 # Set binary permissions.

@@ -18,7 +18,7 @@ import (
 
 // Default settings
 const (
-	DefaultConfigPath = "~/wtf.config"
+	DefaultConfigPath = "~/wtf.conf"
 	DefaultURL        = "https://wtfdial.com"
 )
 
