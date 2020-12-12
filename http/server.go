@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -75,6 +76,9 @@ func NewServer() *Server {
 	// Handle embedded asset serving. This serves files embedded from http/assets.
 	s.router.PathPrefix("/assets/").
 		Handler(http.StripPrefix("/assets/", hashfs.FileServer(assets.FS)))
+
+	// Setup endpoint to display deployed version.
+	s.router.HandleFunc("/version", s.handleVersion).Methods("GET")
 
 	// Setup a base router that excludes asset handling.
 	router := s.router.PathPrefix("/").Subrouter()
@@ -376,6 +380,20 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 	var tmpl html.SettingsTemplate
 	tmpl.Render(r.Context(), w)
+}
+
+// handleVersion displays the deployed version in JSON.
+func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(jsonVersionResponse{
+		Version: wtf.Version,
+		Commit:  wtf.Commit,
+	})
+}
+
+type jsonVersionResponse struct {
+	Version string `json:"version"`
+	Commit  string `json:"commit"`
 }
 
 // session returns session data from the secure cookie.

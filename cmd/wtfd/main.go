@@ -19,9 +19,18 @@ import (
 	"github.com/pelletier/go-toml"
 )
 
+// Build version, injected during build.
+var (
+	version string
+	commit  string
+)
+
 // main is the entry point to our application binary. However, it has some poor
 // usability so we mainly use it to delegate out to our Main type.
 func main() {
+	// Propagate build information to root package to share globally.
+	wtf.Version, wtf.Commit = version, commit
+
 	// Setup signal handlers.
 	ctx, cancel := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)

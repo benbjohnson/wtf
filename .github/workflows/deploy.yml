@@ -23,7 +23,10 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build wtfd
-      run: mkdir dist && make && go build -o dist/wtfd ./cmd/wtfd
+      run: |
+        mkdir dist
+        make
+        go build -ldflags "-X main.version ${{ GITHUB_REF }} -X main.commit ${{ GITHUB_SHA }}" -o dist/wtfd ./cmd/wtfd
 
     - name: Copy file to server
       uses: appleboy/scp-action@master
