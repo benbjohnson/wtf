@@ -26,29 +26,47 @@ jobs:
       run: |
         mkdir dist
         make
-        go build -ldflags "-X main.version ${{ GITHUB_REF }} -X main.commit ${{ GITHUB_SHA }}" -o dist/wtfd ./cmd/wtfd
+        go build -ldflags "-X 'main.version=${{ github.ref }}' -X 'main.commit=${{ github.sha }}'" -o dist/wtfd ./cmd/wtfd
 
     - name: Generate wtfd.conf
       run: |
         cat <<EOF > dist/wtfd.conf
-        [github]
-        client-id     = "${{ secrets.GH_CLIENT_ID }}"
-        client-secret = "{{ secrets.GH_CLIENT_SECRET }}"
+        dsn = "${{ secrets.DSN }}"
         
         [http]
         addr      = ":3000"
-        block-key = "{{ secrets.BLOCK_KEY }}"
-        hash-key  = "{{ secrets.HASH_KEY }}"
+        block-key = "${{ secrets.BLOCK_KEY }}"
+        hash-key  = "${{ secrets.HASH_KEY }}"
+
+        [github]
+        client-id     = "${{ secrets.GH_CLIENT_ID }}"
+        client-secret = "${{ secrets.GH_CLIENT_SECRET }}"
         EOF
 
     - name: Copy file to server
       uses: appleboy/scp-action@master
       with:
         host: wtfdial.com
-        username: deploy
+        username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
         source: "dist/wtfd,dist/wtfd.conf"
         target: "dist"
         strip_components: 1
         rm: true
 
+    - name: Install binary & configuration
+      uses: appleboy/ssh-action@master
+      with:
+        host: wtfdial.com
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          sudo chown wtf:wtf dist/wtfd.conf && sudo chmod 0644 dist/wtfd.conf
+          sudo cp dist/wtfd.conf /etc/wtfd/
+          
+          sudo chown wtf:wtf dist/wtfd && sudo chmod 0755 dist/wtfd
+          sudo setcap cap_net_bind_service=+ep dist/wtfd
+          
+          sudo service wtfd stop
+          sudo mv dist/wtfd /usr/local/bin/wtfd
+          sudo service wtfd start
