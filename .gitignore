@@ -1,5 +1,4 @@
 .DS_Store
 *.test
 *.ego.go
-/http/assets/css/theme.css
 /node_modules
