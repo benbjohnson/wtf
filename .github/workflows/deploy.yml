@@ -7,78 +7,75 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Configure GPG
-      run: |
-        mkdir -p ~/.gnupg/
-        printf "$GPG_SIGNING_KEY" | base64 --decode > ~/.gnupg/private.key
-        gpg --import ~/.gnupg/private.key
-      env:
-        GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+      - name: Install Go (tip)
+        run: |
+          git clone --depth=1 https://go.googlesource.com/go $HOME/gotip
+          cd $HOME/gotip/src
+          ./make.bash
+          echo "GOROOT=$HOME/gotip" >> $GITHUB_ENV
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+          echo "$HOME/gotip/bin" >> $GITHUB_PATH
 
-    - name: Install Go (tip)
-      run: |
-        git clone --depth=1 https://go.googlesource.com/go $HOME/gotip
-        cd $HOME/gotip/src
-        ./make.bash
-        echo "GOROOT=$HOME/gotip" >> $GITHUB_ENV
-        echo "$HOME/go/bin" >> $GITHUB_PATH
-        echo "$HOME/gotip/bin" >> $GITHUB_PATH
+      - name: Install ego
+        run: go install github.com/benbjohnson/ego/cmd/ego@latest
 
-    - name: Install ego
-      run: go install github.com/benbjohnson/ego/cmd/ego@latest
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: git-crypt unlock
+        uses: sliteteam/github-action-git-crypt-unlock@1.0.2
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
 
-    - name: Build wtfd
-      run: |
-        mkdir dist
-        make
-        go build -tags production -ldflags "-X 'main.version=${{ github.ref }}' -X 'main.commit=${{ github.sha }}'" -o dist/wtfd ./cmd/wtfd
+      - name: Build wtfd
+        run: |
+          mkdir dist
+          make
+          go build -tags production -ldflags "-X 'main.version=${{ github.ref }}' -X 'main.commit=${{ github.sha }}'" -o dist/wtfd ./cmd/wtfd
 
-    - name: Generate wtfd.conf
-      run: |
-        cat <<EOF > dist/wtfd.conf
-        [db]
-        dsn = "${{ secrets.DSN }}"
-        
-        [http]
-        domain    = "wtfdial.com"
-        block-key = "${{ secrets.BLOCK_KEY }}"
-        hash-key  = "${{ secrets.HASH_KEY }}"
-
-        [google-analytics]
-        measurement-id = "${{ secrets.GA_MEASUREMENT_ID }}"
-
-        [github]
-        client-id     = "${{ secrets.GH_CLIENT_ID }}"
-        client-secret = "${{ secrets.GH_CLIENT_SECRET }}"
-        EOF
-
-    - name: Copy file to server
-      uses: appleboy/scp-action@master
-      with:
-        host: wtfdial.com
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        source: "dist/wtfd,dist/wtfd.conf"
-        target: "dist"
-        strip_components: 1
-        rm: true
-
-    - name: Install binary & configuration
-      uses: appleboy/ssh-action@master
-      with:
-        host: wtfdial.com
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          sudo chown wtf:wtf dist/wtfd.conf && sudo chmod 0644 dist/wtfd.conf
-          sudo cp dist/wtfd.conf /etc/wtfd/
+      - name: Generate wtfd.conf
+        run: |
+          cat <<EOF > dist/wtfd.conf
+          [db]
+          dsn = "${{ secrets.DSN }}"
           
-          sudo chown wtf:wtf dist/wtfd && sudo chmod 0755 dist/wtfd
-          sudo setcap cap_net_bind_service=+ep dist/wtfd
-          
-          sudo service wtfd stop
-          sudo mv dist/wtfd /usr/local/bin/wtfd
-          sudo service wtfd start
+          [http]
+          domain    = "wtfdial.com"
+          block-key = "${{ secrets.BLOCK_KEY }}"
+          hash-key  = "${{ secrets.HASH_KEY }}"
+
+          [google-analytics]
+          measurement-id = "${{ secrets.GA_MEASUREMENT_ID }}"
+
+          [github]
+          client-id     = "${{ secrets.GH_CLIENT_ID }}"
+          client-secret = "${{ secrets.GH_CLIENT_SECRET }}"
+          EOF
+
+      - name: Copy file to server
+        uses: appleboy/scp-action@master
+        with:
+          host: wtfdial.com
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "dist/wtfd,dist/wtfd.conf"
+          target: "dist"
+          strip_components: 1
+          rm: true
+
+      - name: Install binary & configuration
+        uses: appleboy/ssh-action@master
+        with:
+          host: wtfdial.com
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            sudo chown wtf:wtf dist/wtfd.conf && sudo chmod 0644 dist/wtfd.conf
+            sudo cp dist/wtfd.conf /etc/wtfd/
+            
+            sudo chown wtf:wtf dist/wtfd && sudo chmod 0755 dist/wtfd
+            sudo setcap cap_net_bind_service=+ep dist/wtfd
+            
+            sudo service wtfd stop
+            sudo mv dist/wtfd /usr/local/bin/wtfd
+            sudo service wtfd start
