@@ -22,7 +22,7 @@ func MustRunMain(tb testing.TB) *main.Main {
 	tb.Helper()
 
 	m := main.NewMain()
-	m.Config.DSN = filepath.Join(tb.TempDir(), "db")
+	m.Config.DB.DSN = filepath.Join(tb.TempDir(), "db")
 	m.Config.HTTP.Addr = ":0"
 	m.Config.GitHub.ClientID = strings.Repeat("00", 10)
 	m.Config.GitHub.ClientSecret = strings.Repeat("00", 20)

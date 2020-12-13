@@ -148,9 +148,7 @@ func (s *Server) Open() (err error) {
 
 	// Open a listener on our bind address.
 	if s.Domain != "" {
-		if s.ln, err = autocert.NewListener(s.Domain); err != nil {
-			return fmt.Errorf("autocert: %w", err)
-		}
+		s.ln = autocert.NewListener(s.Domain)
 	} else {
 		if s.ln, err = net.Listen("tcp", s.Addr); err != nil {
 			return err
@@ -449,7 +447,7 @@ func (s *Server) UnmarshalSession(data string, session *Session) error {
 // ListenAndServeTLSRedirect runs an HTTP server on port 80 to redirect users
 // to the TLS-enabled port 443 server.
 func ListenAndServeTLSRedirect() error {
-	return http.ListenAndServe(http.HandleFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		u := *r.URL
 		u.Scheme = "https"
 		http.Redirect(w, r, u.String(), http.StatusFound)
