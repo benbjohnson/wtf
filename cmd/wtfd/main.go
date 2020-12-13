@@ -30,7 +30,8 @@ var (
 // usability so we mainly use it to delegate out to our Main type.
 func main() {
 	// Propagate build information to root package to share globally.
-	wtf.Version, wtf.Commit = version, commit
+	wtf.Version = strings.TrimPrefix(version, "")
+	wtf.Commit = commit
 
 	// Setup signal handlers.
 	ctx, cancel := context.WithCancel(context.Background())
@@ -197,7 +198,7 @@ func (m *Main) Run(ctx context.Context) (err error) {
 
 	// If TLS enabled, redirect non-TLS connections to TLS.
 	if m.HTTPServer.UseTLS() {
-		go http.ListenAndServeTLSRedirect()
+		go http.ListenAndServeTLSRedirect(m.Config.HTTP.Domain)
 	}
 
 	log.Printf("running: url=%q dsn=%q", m.HTTPServer.URL(), m.Config.DB.DSN)

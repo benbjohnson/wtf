@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -77,7 +76,8 @@ func NewServer() *Server {
 		Handler(http.StripPrefix("/assets/", hashfs.FileServer(assets.FS)))
 
 	// Setup endpoint to display deployed version.
-	s.router.HandleFunc("/version", s.handleVersion).Methods("GET")
+	s.router.HandleFunc("/debug/version", s.handleVersion).Methods("GET")
+	s.router.HandleFunc("/debug/commit", s.handleCommit).Methods("GET")
 
 	// Setup a base router that excludes asset handling.
 	router := s.router.PathPrefix("/").Subrouter()
@@ -381,18 +381,16 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 	tmpl.Render(r.Context(), w)
 }
 
-// handleVersion displays the deployed version in JSON.
+// handleVersion displays the deployed version.
 func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(jsonVersionResponse{
-		Version: wtf.Version,
-		Commit:  wtf.Commit,
-	})
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(wtf.Version))
 }
 
-type jsonVersionResponse struct {
-	Version string `json:"version"`
-	Commit  string `json:"commit"`
+// handleVersion displays the deployed commit.
+func (s *Server) handleCommit(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(wtf.Commit))
 }
 
 // session returns session data from the secure cookie.
@@ -446,10 +444,8 @@ func (s *Server) UnmarshalSession(data string, session *Session) error {
 
 // ListenAndServeTLSRedirect runs an HTTP server on port 80 to redirect users
 // to the TLS-enabled port 443 server.
-func ListenAndServeTLSRedirect() error {
+func ListenAndServeTLSRedirect(domain string) error {
 	return http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		u := *r.URL
-		u.Scheme = "https"
-		http.Redirect(w, r, u.String(), http.StatusFound)
+		http.Redirect(w, r, "https://"+domain, http.StatusFound)
 	}))
 }
