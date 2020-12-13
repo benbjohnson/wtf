@@ -7,6 +7,14 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+    - name: Configure GPG
+      run: |
+        mkdir -p ~/.gnupg/
+        printf "$GPG_SIGNING_KEY" | base64 --decode > ~/.gnupg/private.key
+        gpg --import ~/.gnupg/private.key
+      env:
+        GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+
     - name: Install Go (tip)
       run: |
         git clone --depth=1 https://go.googlesource.com/go $HOME/gotip
@@ -26,7 +34,7 @@ jobs:
       run: |
         mkdir dist
         make
-        go build -ldflags "-X 'main.version=${{ github.ref }}' -X 'main.commit=${{ github.sha }}'" -o dist/wtfd ./cmd/wtfd
+        go build -tags production -ldflags "-X 'main.version=${{ github.ref }}' -X 'main.commit=${{ github.sha }}'" -o dist/wtfd ./cmd/wtfd
 
     - name: Generate wtfd.conf
       run: |
