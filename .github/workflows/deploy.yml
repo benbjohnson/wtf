@@ -39,6 +39,9 @@ jobs:
         block-key = "${{ secrets.BLOCK_KEY }}"
         hash-key  = "${{ secrets.HASH_KEY }}"
 
+        [google-analytics]
+        measurement-id = "${{ secrets.GA_MEASUREMENT_ID }}"
+
         [github]
         client-id     = "${{ secrets.GH_CLIENT_ID }}"
         client-secret = "${{ secrets.GH_CLIENT_SECRET }}"
