@@ -15,5 +15,6 @@ require (
 	github.com/gorilla/websocket v1.4.2
 	github.com/mattn/go-sqlite3 v1.14.4
 	github.com/pelletier/go-toml v1.8.1
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58
 )

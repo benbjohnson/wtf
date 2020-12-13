@@ -18,6 +18,7 @@ import (
 	"github.com/benbjohnson/wtf/http/html"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
+	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
 )
@@ -34,12 +35,10 @@ type Server struct {
 	router *mux.Router
 	sc     *securecookie.SecureCookie
 
-	// Bind address for the server's listener.
-	Addr string
-
-	// TLS certificate & key files.
-	CertFile string
-	KeyFile  string
+	// Bind address & domain for the server's listener.
+	// If domain is specified, server is run on TLS using acme/autocert.
+	Addr   string
+	Domain string
 
 	// Keys used for secure cookie encryption.
 	HashKey  string
@@ -108,7 +107,7 @@ func NewServer() *Server {
 
 // UseTLS returns true if the cert & key file are specified.
 func (s *Server) UseTLS() bool {
-	return s.CertFile != "" && s.KeyFile != ""
+	return s.Domain != ""
 }
 
 // Scheme returns the URL scheme for the server.
@@ -148,18 +147,20 @@ func (s *Server) Open() (err error) {
 	}
 
 	// Open a listener on our bind address.
-	if s.ln, err = net.Listen("tcp", s.Addr); err != nil {
-		return err
+	if s.Domain != "" {
+		if s.ln, err = autocert.NewListener(s.Domain); err != nil {
+			return fmt.Errorf("autocert: %w", err)
+		}
+	} else {
+		if s.ln, err = net.Listen("tcp", s.Addr); err != nil {
+			return err
+		}
 	}
 
 	// Begin serving requests on the listener. We use Serve() instead of
 	// ListenAndServe() because it allows us to check for listen errors (such
 	// as trying to use an already open port) synchronously.
-	if !s.UseTLS() {
-		go s.server.Serve(s.ln)
-	} else {
-		go s.server.ServeTLS(s.ln, s.CertFile, s.KeyFile)
-	}
+	go s.server.Serve(s.ln)
 
 	return nil
 }
@@ -443,4 +444,14 @@ func (s *Server) MarshalSession(session Session) (string, error) {
 // This is exported to allow the unit tests to generate fake sessions.
 func (s *Server) UnmarshalSession(data string, session *Session) error {
 	return s.sc.Decode(SessionCookieName, data, &session)
+}
+
+// ListenAndServeTLSRedirect runs an HTTP server on port 80 to redirect users
+// to the TLS-enabled port 443 server.
+func ListenAndServeTLSRedirect() error {
+	return http.ListenAndServe(http.HandleFunc(func(w http.ResponseWriter, r *http.Request) {
+		u := *r.URL
+		u.Scheme = "https"
+		http.Redirect(w, r, u.String(), http.StatusFound)
+	}))
 }

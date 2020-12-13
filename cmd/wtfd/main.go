@@ -155,7 +155,7 @@ func (m *Main) Run(ctx context.Context) (err error) {
 	// Expand the DSN (in case it is in the user home directory ("~")).
 	// Then open the database. This will instantiate the SQLite connection
 	// and execute any pending migration files.
-	if m.DB.DSN, err = expandDSN(m.Config.DSN); err != nil {
+	if m.DB.DSN, err = expandDSN(m.Config.DB.DSN); err != nil {
 		return fmt.Errorf("cannot expand dsn: %w", err)
 	}
 	if err := m.DB.Open(); err != nil {
@@ -173,8 +173,7 @@ func (m *Main) Run(ctx context.Context) (err error) {
 
 	// Copy configuration settings to the HTTP server.
 	m.HTTPServer.Addr = m.Config.HTTP.Addr
-	m.HTTPServer.CertFile = m.Config.HTTP.CertFile
-	m.HTTPServer.KeyFile = m.Config.HTTP.KeyFile
+	m.HTTPServer.Domain = m.Config.HTTP.Domain
 	m.HTTPServer.HashKey = m.Config.HTTP.HashKey
 	m.HTTPServer.BlockKey = m.Config.HTTP.BlockKey
 	m.HTTPServer.GitHubClientID = m.Config.GitHub.ClientID
@@ -192,7 +191,12 @@ func (m *Main) Run(ctx context.Context) (err error) {
 		return err
 	}
 
-	log.Printf("running: url=%q dsn=%q", m.HTTPServer.URL(), m.Config.DSN)
+	// If TLS enabled, redirect non-TLS connections to TLS.
+	if m.HTTPServer.UseTLS() {
+		go http.ListenAndServeTLSRedirect()
+	}
+
+	log.Printf("running: url=%q dsn=%q", m.HTTPServer.URL(), m.Config.DB.DSN)
 
 	return nil
 }
@@ -213,8 +217,7 @@ type Config struct {
 
 	HTTP struct {
 		Addr     string `toml:"addr"`
-		CertFile string `toml:"cert-file"`
-		KeyFile  string `toml:"key-file"`
+		Domain   string `toml:"domain"`
 		HashKey  string `toml:"hash-key"`
 		BlockKey string `toml:"block-key"`
 	} `toml:"http"`
@@ -228,7 +231,7 @@ type Config struct {
 // DefaultConfig returns a new instance of Config with defaults set.
 func DefaultConfig() Config {
 	var config Config
-	config.DSN = DefaultDSN
+	config.DB.DSN = DefaultDSN
 	return config
 }
 

@@ -35,7 +35,7 @@ jobs:
         dsn = "${{ secrets.DSN }}"
         
         [http]
-        addr      = ":3000"
+        domain    = "wtfdial.com"
         block-key = "${{ secrets.BLOCK_KEY }}"
         hash-key  = "${{ secrets.HASH_KEY }}"
 
