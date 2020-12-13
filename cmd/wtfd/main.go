@@ -14,6 +14,7 @@ import (
 
 	"github.com/benbjohnson/wtf"
 	"github.com/benbjohnson/wtf/http"
+	"github.com/benbjohnson/wtf/http/html"
 	"github.com/benbjohnson/wtf/inmem"
 	"github.com/benbjohnson/wtf/sqlite"
 	"github.com/pelletier/go-toml"
@@ -171,6 +172,9 @@ func (m *Main) Run(ctx context.Context) (err error) {
 	// Attach user service to Main for testing.
 	m.UserService = userService
 
+	// Set global GA settings.
+	html.MeasurementID = m.Config.GoogleAnalytics.MeasurementID
+
 	// Copy configuration settings to the HTTP server.
 	m.HTTPServer.Addr = m.Config.HTTP.Addr
 	m.HTTPServer.Domain = m.Config.HTTP.Domain
@@ -221,6 +225,10 @@ type Config struct {
 		HashKey  string `toml:"hash-key"`
 		BlockKey string `toml:"block-key"`
 	} `toml:"http"`
+
+	GoogleAnalytics struct {
+		MeasurementID string `toml:"measurement-id"`
+	} `toml:"google-analytics"`
 
 	GitHub struct {
 		ClientID     string `toml:"client-id"`

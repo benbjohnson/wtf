@@ -6,6 +6,9 @@ import (
 	"github.com/benbjohnson/wtf/http/assets"
 )
 
+// MeasurementID is a Google Analytics measurement ID.
+// It has to be set globally so we can avoid passing it to every template.
+var MeasurementID string
 
 type App struct {
 	Title      string
@@ -44,6 +47,15 @@ func (app *App) Render(ctx context.Context, w io.Writer) {
 	<% } %>
 	<link href="/assets/<%= assets.FS.HashName(`css/fontawesome.css`) %>" rel="stylesheet" />
 
+	<% if MeasurementID != "" { %>
+		<script async src="https://www.googletagmanager.com/gtag/js?id=<%= MeasurementID %>"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+			gtag('config', '<%= MeasurementID %>');
+		</script>
+	<% } %>
 	<% if app.Header != nil { %><% app.Header() %><% } %>
 </head>
 
