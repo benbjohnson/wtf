@@ -207,7 +207,9 @@ const (
 
 // Config represents the CLI configuration file.
 type Config struct {
-	DSN string `toml:"dsn"`
+	DB struct {
+		DSN string `toml:"dsn"`
+	} `toml:"db"`
 
 	HTTP struct {
 		Addr     string `toml:"addr"`
