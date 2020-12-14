@@ -107,6 +107,13 @@ type DialService interface {
 	// is not the dial owner.
 	DeleteDial(ctx context.Context, id int) error
 
+	// Sets the value of the user's membership in a dial. This works the same
+	// as calling UpdateDialMembership() although it doesn't require that the
+	// user know their membership ID. Only the dial ID.
+	//
+	// Returns ENOTFOUND if the membership does not exist.
+	SetDialMembershipValue(ctx context.Context, dialID, value int) error
+
 	// AverageDialValueReport returns a report of the average dial value across
 	// all dials that the user is a member of. Average values are computed
 	// between start & end time and are slotted into given intervals. The

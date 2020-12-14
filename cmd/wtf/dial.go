@@ -28,6 +28,8 @@ func (c *DialCommand) Run(ctx context.Context, args []string) error {
 		return (&DialDeleteCommand{}).Run(ctx, args)
 	case "members":
 		return (&DialMembersCommand{}).Run(ctx, args)
+	case "set":
+		return (&DialSetCommand{}).Run(ctx, args)
 	case "help":
 		c.usage()
 		return flag.ErrHelp
@@ -51,5 +53,6 @@ The commands are:
 	create      create a new dial
 	delete      remove an existing dial
 	members     view list of members of a dial
+	set         set your WTF level for a dial
 `[1:])
 }

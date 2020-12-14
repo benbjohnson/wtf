@@ -36,6 +36,9 @@ func (s *Server) registerDialRoutes(r *mux.Router) {
 
 	// Removing a dial.
 	r.HandleFunc("/dials/{id}", s.handleDialDelete).Methods("DELETE")
+
+	// Updating the value for the user's membership.
+	r.HandleFunc("/dials/{id}/membership", s.handleDialSetMembershipValue).Methods("PUT")
 }
 
 // handleDialIndex handles the "GET /dials" route. This route can optionally
@@ -286,6 +289,36 @@ func (s *Server) handleDialDelete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// handleDialSetMembershipValue handles the "PUT /dials/:id/membership" route.
+func (s *Server) handleDialSetMembershipValue(w http.ResponseWriter, r *http.Request) {
+	var jsonRequest jsonSetDialMembershipValueRequest
+	if err := json.NewDecoder(r.Body).Decode(&jsonRequest); err != nil {
+		Error(w, r, wtf.Errorf(wtf.EINVALID, "Invalid JSON body"))
+		return
+	}
+
+	// Parse dial ID from path.
+	id, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		Error(w, r, wtf.Errorf(wtf.EINVALID, "Invalid ID format"))
+		return
+	}
+
+	// Update value for the user's membership on the dial.
+	if err := s.DialService.SetDialMembershipValue(r.Context(), id, jsonRequest.Value); err != nil {
+		Error(w, r, err)
+		return
+	}
+
+	// Write response to indicate success.
+	w.Header().Set("Content-type", "application/json")
+	w.Write([]byte(`{}`))
+}
+
+type jsonSetDialMembershipValueRequest struct {
+	Value int `json:"value"`
+}
+
 // DialService implements the wtf.DialService over the HTTP protocol.
 type DialService struct {
 	Client *Client
@@ -399,6 +432,36 @@ func (s *DialService) UpdateDial(ctx context.Context, id int, upd wtf.DialUpdate
 func (s *DialService) DeleteDial(ctx context.Context, id int) error {
 	// Create a request with API key.
 	req, err := s.Client.newRequest(ctx, "DELETE", fmt.Sprintf("/dials/%d", id), nil)
+	if err != nil {
+		return err
+	}
+
+	// Issue request. Any non-200 response is considered an error.
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	} else if resp.StatusCode != http.StatusOK {
+		return parseResponseError(resp)
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
+// SetDialMembershipValue sets the value of the user's membership in a dial.
+// This works the same as calling UpdateDialMembership() although it doesn't
+// require that the user know their membership ID. Only the dial ID.
+//
+// Returns ENOTFOUND if the membership does not exist.
+func (s *DialService) SetDialMembershipValue(ctx context.Context, dialID, value int) error {
+	// Marshal value into JSON format.
+	body, err := json.Marshal(jsonSetDialMembershipValueRequest{Value: value})
+	if err != nil {
+		return err
+	}
+
+	// Create a request with API key.
+	req, err := s.Client.newRequest(ctx, "PUT", fmt.Sprintf("/dials/%d/membership", dialID), bytes.NewReader(body))
 	if err != nil {
 		return err
 	}

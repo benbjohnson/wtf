@@ -136,6 +136,39 @@ func (s *DialService) DeleteDial(ctx context.Context, id int) error {
 	return tx.Commit()
 }
 
+// Sets the value of the user's membership in a dial. This works the same
+// as calling UpdateDialMembership() although it doesn't require that the
+// user know their membership ID. Only the dial ID.
+//
+// Returns ENOTFOUND if the membership does not exist.
+func (s *DialService) SetDialMembershipValue(ctx context.Context, dialID, value int) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Fetch current user.
+	userID := wtf.UserIDFromContext(ctx)
+
+	// Find user's membership.
+	memberships, _, err := findDialMemberships(ctx, tx, wtf.DialMembershipFilter{
+		DialID: &dialID,
+		UserID: &userID,
+	})
+	if err != nil {
+		return err
+	} else if len(memberships) == 0 {
+		return wtf.Errorf(wtf.ENOTFOUND, "User is not a member of this dial.")
+	}
+
+	// Update value on membership.
+	if _, err := updateDialMembership(ctx, tx, memberships[0].ID, wtf.DialMembershipUpdate{Value: &value}); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 // DialValues returns a list of all stored historical values for a dial.
 // This is only used for testing.
 func (s *DialService) DialValues(ctx context.Context, id int) ([]int, error) {
