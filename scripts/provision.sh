@@ -45,8 +45,10 @@ APT::Periodic::AutocleanInterval "7";
 APT::Periodic::Unattended-Upgrade "1";
 EOF
 
-# Create user.
+# Create deploy user.
 useradd -s /sbin/nologin wtf
+mkdir -p /home/wtf
+chown wtf:wtf /home/wtf && chmod 700 /home/wtf
 
 # Install systemd service.
 cat <<EOF > /etc/systemd/system/wtfd.service
