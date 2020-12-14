@@ -130,7 +130,11 @@ func (s *Server) Port() int {
 
 // URL returns the local base URL of the running server.
 func (s *Server) URL() string {
-	return fmt.Sprintf("%s://localhost:%d", s.Scheme(), s.Port())
+	domain := "localhost"
+	if s.Domain != "" {
+		domain = s.Domain
+	}
+	return fmt.Sprintf("%s://%s:%d", s.Scheme(), domain, s.Port())
 }
 
 // Open validates the server options and begins listening on the bind address.
