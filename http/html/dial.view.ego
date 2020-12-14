@@ -24,22 +24,24 @@ func (tmpl *DialViewTemplate) Render(ctx context.Context, w io.Writer) {
 								<span class="dial-name">
 									<%= tmpl.Dial.Name %>
 								</span>
-
-								<% if wtf.CanEditDial(ctx, tmpl.Dial) { %>
-									<a href="/dials/<%= tmpl.Dial.ID %>/edit">
-										<span class="fas fa-edit fs--1 mr-1" aria-hidden="true"></span>
-									</a>
-								<% } %>
 							</h2>
 						</div>
 					</div>
 
 					<% if isOwner { %>
 						<div class="col-auto">
-							<button class="btn btn-outline-danger mb-1" form="deleteDialForm" onclick="deleteDialButton_onClick(event)">
-								<span class="fas fa-trash mr-1"></span>
-								Delete Dial
-							</button>
+							<nav class="navbar">
+								<div class="dropdown font-sans-serif position-static">
+									<button class="btn btn-link text-600 btn-sm dropdown-toggle btn-reveal dropdown-caret-none" type="button" id="dial-menu" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">
+										<span class="fas fa-ellipsis-v"></span>
+									</button>
+									<div class="dropdown-menu dropdown-menu-right border py-2" aria-labelledby="dial-menu">
+										<a class="dropdown-item" href="/dials/<%= tmpl.Dial.ID %>/edit">Edit Dial</a>
+										<div class="dropdown-divider"></div>
+										<button class="dropdown-item text-danger" form="deleteDialForm" onclick="deleteDialButton_onClick(event)">Delete Dial</a>
+									</div>
+								</div>
+							</nav>
 						</div>
 					<% } %>
 				</div>
