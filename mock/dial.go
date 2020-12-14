@@ -16,7 +16,7 @@ type DialService struct {
 	CreateDialFn             func(ctx context.Context, dial *wtf.Dial) error
 	UpdateDialFn             func(ctx context.Context, id int, upd wtf.DialUpdate) (*wtf.Dial, error)
 	DeleteDialFn             func(ctx context.Context, id int) error
-	SetDialMembershipValue   func(ctx context.Context, dialID, value int) error
+	SetDialMembershipValueFn func(ctx context.Context, dialID, value int) error
 	AverageDialValueReportFn func(ctx context.Context, start, end time.Time, interval time.Duration) (*wtf.DialValueReport, error)
 }
 
