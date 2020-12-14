@@ -353,8 +353,13 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	var tmpl html.IndexTemplate
 
 	// Fetch all dials the user is a member of.
+	// If user is not a member of any dials, redirect to dial list which
+	// includes a description of how to start.
 	if tmpl.Dials, _, err = s.DialService.FindDials(r.Context(), wtf.DialFilter{}); err != nil {
 		Error(w, r, err)
+		return
+	} else if len(tmpl.Dials) == 0 {
+		http.Redirect(w, r, "/dials", http.StatusFound)
 		return
 	}
 
