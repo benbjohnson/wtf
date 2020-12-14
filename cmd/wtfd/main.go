@@ -204,7 +204,7 @@ func (m *Main) Run(ctx context.Context) (err error) {
 	}
 
 	// Enable internal debug endpoints.
-	go func() { log.Fatal(http.ListenAndServeDebug()) }()
+	go func() { http.ListenAndServeDebug() }()
 
 	log.Printf("running: url=%q debug=http://localhost:6060 dsn=%q", m.HTTPServer.URL(), m.Config.DB.DSN)
 
