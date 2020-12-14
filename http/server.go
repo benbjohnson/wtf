@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	_ "net/http/pprof"
 	"path"
 	"strings"
 	"time"
@@ -448,4 +449,9 @@ func ListenAndServeTLSRedirect(domain string) error {
 	return http.ListenAndServe(":80", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "https://"+domain, http.StatusFound)
 	}))
+}
+
+// ListenAndServeDebug runs an HTTP server with /debug endpoints (e.g. pprof, vars).
+func ListenAndServeDebug() error {
+	return http.ListenAndServe(":6060", nil)
 }

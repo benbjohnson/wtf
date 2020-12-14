@@ -198,10 +198,15 @@ func (m *Main) Run(ctx context.Context) (err error) {
 
 	// If TLS enabled, redirect non-TLS connections to TLS.
 	if m.HTTPServer.UseTLS() {
-		go http.ListenAndServeTLSRedirect(m.Config.HTTP.Domain)
+		go func() {
+			log.Fatal(http.ListenAndServeTLSRedirect(m.Config.HTTP.Domain))
+		}()
 	}
 
-	log.Printf("running: url=%q dsn=%q", m.HTTPServer.URL(), m.Config.DB.DSN)
+	// Enable internal debug endpoints.
+	go func() { log.Fatal(http.ListenAndServeDebug()) }()
+
+	log.Printf("running: url=%q debug=http://localhost:6060 dsn=%q", m.HTTPServer.URL(), m.Config.DB.DSN)
 
 	return nil
 }
