@@ -1,2 +1,5 @@
 /http/assets/css/theme.css filter=git-crypt diff=git-crypt
+/http/assets/index.html filter=git-crypt diff=git-crypt
+/http/assets/images/background.jpg filter=git-crypt diff=git-crypt
+/http/assets/images/screenshot.png filter=git-crypt diff=git-crypt
 

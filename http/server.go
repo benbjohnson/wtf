@@ -85,6 +85,9 @@ func NewServer() *Server {
 	router.Use(s.authenticate)
 	router.Use(loadFlash)
 
+	// Handle authentication check within handler function for home page.
+	router.HandleFunc("/", s.handleIndex).Methods("GET")
+
 	// Register unauthenticated routes.
 	{
 		r := s.router.PathPrefix("/").Subrouter()
@@ -96,7 +99,6 @@ func NewServer() *Server {
 	{
 		r := router.PathPrefix("/").Subrouter()
 		r.Use(s.requireAuth)
-		r.HandleFunc("/", s.handleIndex).Methods("GET")
 		r.HandleFunc("/settings", s.handleSettings).Methods("GET")
 		s.registerDialRoutes(r)
 		s.registerDialMembershipRoutes(r)
@@ -349,6 +351,18 @@ func (s *Server) handleNotFound(w http.ResponseWriter, r *http.Request) {
 // handleIndex handles the "GET /" route. It displays a dashboard with the
 // user's dials, recently updated membership values, & a chart.
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
+	// If user is not logged in & application is built with a home page,
+	// return the home page. Otherwise redirect to login.
+	if wtf.UserIDFromContext(r.Context()) == 0 {
+		if buf := assets.IndexHTML; len(buf) != 0 {
+			w.Write(buf)
+			return
+		}
+
+		http.Redirect(w, r, "/login", http.StatusFound)
+		return
+	}
+
 	var err error
 	var tmpl html.IndexTemplate
 

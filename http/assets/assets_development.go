@@ -8,3 +8,5 @@ import "embed"
 //go:embed scripts/*.js
 //go:embed fonts
 var fsys embed.FS
+
+var IndexHTML []byte
