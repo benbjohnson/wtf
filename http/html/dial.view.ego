@@ -50,8 +50,8 @@ func (tmpl *DialViewTemplate) Render(ctx context.Context, w io.Writer) {
 
 		<ego:Flash/>
 
-		<div class="row mb-3">
-			<div class="col-md-8">
+		<div class="row">
+			<div class="col-md-8 mb-3">
 				<div class="card h-100">
 					<div class="card-header bg-light">
 						<h5>Overall WTF Level</h5>
@@ -66,7 +66,7 @@ func (tmpl *DialViewTemplate) Render(ctx context.Context, w io.Writer) {
 				</div>
 			</div>
 
-			<div class="col-md-4">
+			<div class="col-md-4 mb-3">
 				<div class="card h-100">
 					<div class="card-header bg-light">
 						<div class="row align-items-center">
