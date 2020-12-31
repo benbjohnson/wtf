@@ -115,6 +115,12 @@ func (s *Server) handleOAuthGitHubCallback(w http.ResponseWriter, r *http.Reques
 	// Email is not necessarily available for all accounts. If it is, store it
 	// so we can link together multiple OAuth providers in the future
 	// (e.g. GitHub, Google, etc).
+	var name string
+	if u.Name != nil {
+		name = *u.Name
+	} else if u.Login != nil {
+		name = *u.Login
+	}
 	var email string
 	if u.Email != nil {
 		email = *u.Email
@@ -127,7 +133,7 @@ func (s *Server) handleOAuthGitHubCallback(w http.ResponseWriter, r *http.Reques
 		AccessToken:  tok.AccessToken,
 		RefreshToken: tok.RefreshToken,
 		User: &wtf.User{
-			Name:  *u.Name,
+			Name:  name,
 			Email: email,
 		},
 	}
