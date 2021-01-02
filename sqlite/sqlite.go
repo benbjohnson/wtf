@@ -7,6 +7,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -14,6 +15,26 @@ import (
 
 	"github.com/benbjohnson/wtf"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+// Database metrics.
+var (
+	userCountGauge = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "litestream_db_users",
+		Help: "The total number of users",
+	})
+
+	dialCountGauge = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "litestream_db_dials",
+		Help: "The total number of dials",
+	})
+
+	dialMembershipCountGauge = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "litestream_db_dial_memberships",
+		Help: "The total number of dial memberships",
+	})
 )
 
 //go:embed migration/*.sql
@@ -21,7 +42,9 @@ var migrationFS embed.FS
 
 // DB represents the database connection.
 type DB struct {
-	db *sql.DB
+	db     *sql.DB
+	ctx    context.Context // background context
+	cancel func()          // cancel background context
 
 	// Datasource name.
 	DSN string
@@ -36,12 +59,14 @@ type DB struct {
 
 // NewDB returns a new instance of DB associated with the given datasource name.
 func NewDB(dsn string) *DB {
-	return &DB{
+	db := &DB{
 		DSN: dsn,
 		Now: time.Now,
 
 		EventService: wtf.NopEventService(),
 	}
+	db.ctx, db.cancel = context.WithCancel(context.Background())
+	return db
 }
 
 // Open opens the database connection.
@@ -77,7 +102,14 @@ func (db *DB) Open() (err error) {
 		return fmt.Errorf("foreign keys pragma: %w", err)
 	}
 
-	return db.migrate()
+	if err := db.migrate(); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
+
+	// Monitor stats in background goroutine.
+	go db.monitor()
+
+	return nil
 }
 
 // migrate sets up migration tracking and executes pending migration files.
@@ -145,6 +177,10 @@ func (db *DB) migrateFile(name string) error {
 
 // Close closes the database connection.
 func (db *DB) Close() error {
+	// Cancel background context.
+	db.cancel()
+
+	// Close database.
 	if db.db != nil {
 		return db.db.Close()
 	}
@@ -166,6 +202,51 @@ func (db *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 		db:  db,
 		now: db.Now().UTC().Truncate(time.Second),
 	}, nil
+}
+
+// monitor runs in a goroutine and periodically calculates internal stats.
+func (db *DB) monitor() {
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-db.ctx.Done():
+			return
+		case <-ticker.C:
+		}
+
+		if err := db.updateStats(db.ctx); err != nil {
+			log.Printf("stats error: %s", err)
+		}
+	}
+}
+
+// updateStats updates the metrics for the database.
+func (db *DB) updateStats(ctx context.Context) error {
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var n int
+	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM users;`).Scan(&n); err != nil {
+		return fmt.Errorf("user count: %w", err)
+	}
+	userCountGauge.Set(float64(n))
+
+	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM dials;`).Scan(&n); err != nil {
+		return fmt.Errorf("dial count: %w", err)
+	}
+	dialCountGauge.Set(float64(n))
+
+	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM dial_memberships;`).Scan(&n); err != nil {
+		return fmt.Errorf("dial membership count: %w", err)
+	}
+	dialMembershipCountGauge.Set(float64(n))
+
+	return nil
 }
 
 // Tx wraps the SQL Tx object to provide a timestamp at the start of the transaction.

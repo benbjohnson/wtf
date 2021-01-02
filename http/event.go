@@ -1,11 +1,22 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+// Websocket metrics.
+var (
+	websocketConnections = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "litestream_http_websocket_connections",
+		Help: "Total number of connected websocket users",
+	})
 )
 
 // registerEventRoutes is a helper function to register event routes.
@@ -16,12 +27,22 @@ func (s *Server) registerEventRoutes(r *mux.Router) {
 // handleEvents handles the "GET /events" route. This route provides real-time
 // event notification over Websockets.
 func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
+	websocketConnections.Inc()
+	defer websocketConnections.Dec()
+
 	// Upgrade HTTP connection to use websockets.
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		LogError(r, err)
 		return
 	}
+
+	ctx, cancel := context.WithCancel(r.Context())
+	r = r.WithContext(ctx)
+	conn.SetCloseHandler(func(code int, text string) error {
+		cancel()
+		return nil
+	})
 
 	// We defer the connection close to ensure it is disconnected when we
 	// exit this function. This can occur if the HTTP request disconnects or

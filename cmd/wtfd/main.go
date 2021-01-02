@@ -56,6 +56,7 @@ func main() {
 	if err := m.Run(ctx); err != nil {
 		m.Close()
 		fmt.Fprintln(os.Stderr, err)
+		wtf.ReportError(ctx, err)
 		os.Exit(1)
 	}
 

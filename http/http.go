@@ -11,6 +11,16 @@ import (
 
 	"github.com/benbjohnson/wtf"
 	"github.com/benbjohnson/wtf/http/html"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+// Generic HTTP metrics.
+var (
+	errorCount = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "litestream_http_error_count",
+		Help: "Total number of errors by error code",
+	}, []string{"code"})
 )
 
 // Client represents an HTTP client.
@@ -68,6 +78,9 @@ func SetFlash(w http.ResponseWriter, s string) {
 func Error(w http.ResponseWriter, r *http.Request, err error) {
 	// Extract error code & message.
 	code, message := wtf.ErrorCode(err), wtf.ErrorMessage(err)
+
+	// Track metrics by code.
+	errorCount.WithLabelValues(code).Inc()
 
 	// Log & report internal errors.
 	if code == wtf.EINTERNAL {

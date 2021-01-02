@@ -18,9 +18,25 @@ import (
 	"github.com/benbjohnson/wtf/http/html"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
+)
+
+// Generic HTTP metrics.
+var (
+	requestCount = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "litestream_http_request_count",
+		Help: "Total number of requests by route",
+	}, []string{"route"})
+
+	requestSeconds = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "litestream_http_request_seconds",
+		Help: "Total amount of request time by route, in seconds",
+	}, []string{"route"})
 )
 
 // ShutdownTimeout is the time given for outstanding requests to finish before shutdown.
@@ -87,6 +103,7 @@ func NewServer() *Server {
 	router := s.router.PathPrefix("/").Subrouter()
 	router.Use(s.authenticate)
 	router.Use(loadFlash)
+	router.Use(trackMetrics)
 
 	// Handle authentication check within handler function for home page.
 	router.HandleFunc("/", s.handleIndex).Methods("GET")
@@ -349,6 +366,34 @@ func loadFlash(next http.Handler) http.Handler {
 	})
 }
 
+// trackMetrics is middleware for tracking the request count and timing per route.
+func trackMetrics(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Obtain path template & start time of request.
+		t := time.Now()
+		tmpl := requestPathTemplate(r)
+
+		// Delegate to next handler in middleware chain.
+		next.ServeHTTP(w, r)
+
+		// Track total time unless it is the WebSocket endpoint for events.
+		if tmpl != "" && tmpl != "/events" {
+			requestCount.WithLabelValues(tmpl).Inc()
+			requestSeconds.WithLabelValues(tmpl).Add(float64(time.Since(t).Seconds()))
+		}
+	})
+}
+
+// requestPathTemplate returns the route path template for r.
+func requestPathTemplate(r *http.Request) string {
+	route := mux.CurrentRoute(r)
+	if route == nil {
+		return ""
+	}
+	tmpl, _ := route.GetPathTemplate()
+	return tmpl
+}
+
 // reportPanic is middleware for catching panics and reporting them.
 func reportPanic(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -501,5 +546,6 @@ func ListenAndServeTLSRedirect(domain string) error {
 
 // ListenAndServeDebug runs an HTTP server with /debug endpoints (e.g. pprof, vars).
 func ListenAndServeDebug() error {
+	http.Handle("/metrics", promhttp.Handler())
 	return http.ListenAndServe(":6060", nil)
 }
