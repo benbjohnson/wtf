@@ -64,6 +64,9 @@ func NewServer() *Server {
 		router: mux.NewRouter(),
 	}
 
+	// Report panics to external service.
+	s.router.Use(reportPanic)
+
 	// Our router is wrapped by another function handler to perform some
 	// middleware-like tasks that cannot be performed by actual middleware.
 	// This includes changing route paths for JSON endpoints & overridding methods.
@@ -342,6 +345,20 @@ func loadFlash(next http.Handler) http.Handler {
 		}
 
 		// Delegate to next HTTP handler.
+		next.ServeHTTP(w, r)
+	})
+}
+
+// reportPanic is middleware for catching panics and reporting them.
+func reportPanic(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				wtf.ReportPanic(err)
+			}
+		}()
+
 		next.ServeHTTP(w, r)
 	})
 }

@@ -69,8 +69,9 @@ func Error(w http.ResponseWriter, r *http.Request, err error) {
 	// Extract error code & message.
 	code, message := wtf.ErrorCode(err), wtf.ErrorMessage(err)
 
-	// Log internal errors.
+	// Log & report internal errors.
 	if code == wtf.EINTERNAL {
+		wtf.ReportError(r.Context(), err, r)
 		LogError(r, err)
 	}
 

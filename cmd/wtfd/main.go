@@ -18,6 +18,7 @@ import (
 	"github.com/benbjohnson/wtf/inmem"
 	"github.com/benbjohnson/wtf/sqlite"
 	"github.com/pelletier/go-toml"
+	"github.com/rollbar/rollbar-go"
 )
 
 // Build version, injected during build.
@@ -146,6 +147,17 @@ func (m *Main) ParseFlags(ctx context.Context, args []string) error {
 // Run executes the program. The configuration should already be set up before
 // calling this function.
 func (m *Main) Run(ctx context.Context) (err error) {
+	// Initialize error tracking.
+	if m.Config.Rollbar.Token != "" {
+		rollbar.SetToken(m.Config.Rollbar.Token)
+		rollbar.SetEnvironment("production")
+		rollbar.SetCodeVersion(version)
+		rollbar.SetServerRoot("github.com/benbjohnson/wtf")
+		wtf.ReportError = rollbarReportError
+		wtf.ReportPanic = rollbarReportPanic
+		log.Printf("rollbar error tracking enabled")
+	}
+
 	// Initialize event service for real-time events.
 	// We are using an in-memory implementation but this could be changed to
 	// a more robust service if we expanded out to multiple nodes.
@@ -240,6 +252,10 @@ type Config struct {
 		ClientID     string `toml:"client-id"`
 		ClientSecret string `toml:"client-secret"`
 	} `toml:"github"`
+
+	Rollbar struct {
+		Token string `toml:"token"`
+	} `toml:"rollbar"`
 }
 
 // DefaultConfig returns a new instance of Config with defaults set.
@@ -288,4 +304,25 @@ func expandDSN(dsn string) (string, error) {
 		return dsn, nil
 	}
 	return expand(dsn)
+}
+
+// rollbarReportError reports internal errors to rollbar.
+func rollbarReportError(ctx context.Context, err error, args ...interface{}) {
+	if wtf.ErrorCode(err) != wtf.EINTERNAL {
+		return
+	}
+
+	// Set user information for error, if available.
+	if u := wtf.UserFromContext(ctx); u != nil {
+		rollbar.SetPerson(fmt.Sprint(u.ID), u.Name, u.Email)
+	} else {
+		rollbar.ClearPerson()
+	}
+
+	rollbar.Error(append([]interface{}{err}, args)...)
+}
+
+// rollbarReportPanic reports panics to rollbar.
+func rollbarReportPanic(err interface{}) {
+	rollbar.LogPanic(err, true)
 }

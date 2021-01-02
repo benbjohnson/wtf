@@ -50,6 +50,9 @@ jobs:
           [github]
           client-id     = "${{ secrets.GH_CLIENT_ID }}"
           client-secret = "${{ secrets.GH_CLIENT_SECRET }}"
+
+          [rollbar]
+          token = "${{ secrets.ROLLBAR_TOKEN }}"
           EOF
 
       - name: Copy file to server
