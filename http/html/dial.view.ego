@@ -194,6 +194,7 @@ func (tmpl *DialViewTemplate) Render(ctx context.Context, w io.Writer) {
 
 	<ego::Footer>
 		<script>
+			var dialID = <%= tmpl.Dial.ID %>
 			var selfMembershipID = <%= selfMembership.ID %>
 
 			var chart = document.getElementById('chart');
@@ -243,7 +244,12 @@ func (tmpl *DialViewTemplate) Render(ctx context.Context, w io.Writer) {
 			// Enable animation for rotation after initial draw.
 			chart.chart.config.options.animation.animateRotate = true
 
+			// Invoked whenever the websocket receives a dial update.
 			function ondialvaluechanged(payload) {
+				// Ignore if this event does not apply to the current dial.
+				if (payload.id !== dialID) {
+					return
+				}
 				chart.prevValue = chart.chart.data.datasets[0].data[0]
 				chart.chart.data.datasets[0].data = [payload.value, 100-payload.value];
 				chart.chart.update();
