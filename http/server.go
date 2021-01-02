@@ -132,9 +132,17 @@ func (s *Server) Port() int {
 
 // URL returns the local base URL of the running server.
 func (s *Server) URL() string {
+	scheme, port := s.Scheme(), s.Port()
+
+	// Use localhost unless a domain is specified.
 	domain := "localhost"
 	if s.Domain != "" {
 		domain = s.Domain
+	}
+
+	// Return without port if using standard ports.
+	if (scheme == "http" && port == 80) || (scheme == "https" && port == 443) {
+		return fmt.Sprintf("%s://%s", s.Scheme(), domain)
 	}
 	return fmt.Sprintf("%s://%s:%d", s.Scheme(), domain, s.Port())
 }
