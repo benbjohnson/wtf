@@ -70,9 +70,9 @@ func (tmpl *IndexTemplate) Render(ctx context.Context, w io.Writer) {
 					<table class="table fs--1">
 						<thead class="bg-200 text-900">
 							<tr>
-								<th class="pr-1 align-middle white-space-nowrap">Member</th>
-
 								<th class="pr-1 align-middle white-space-nowrap">Dial</th>
+
+								<th class="pr-1 align-middle white-space-nowrap">Member</th>
 
 								<th class="pr-1 align-middle white-space-nowrap text-center">WTF Level</th>
 
@@ -84,15 +84,15 @@ func (tmpl *IndexTemplate) Render(ctx context.Context, w io.Writer) {
 						<tbody class="list">
 							<% for _, membership := range tmpl.Memberships { %>
 								<tr>
-									<th class="align-middle white-space-nowrap">
-										<%= membership.User.Name %>
-									</th>
-
 									<td class="align-middle white-space-nowrap">
 										<a href="/dials/<%= membership.Dial.ID %>">
 											<%= membership.Dial.Name %>
 										</a>
 									</td>
+
+									<th class="align-middle white-space-nowrap">
+										<%= membership.User.Name %>
+									</th>
 
 									<td class="align-middle text-center fs-0 white-space-nowrap">
 										<ego:WTFBadge DialMembershipID=membership.ID Value=membership.Value/>
