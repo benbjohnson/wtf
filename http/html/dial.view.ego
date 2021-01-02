@@ -137,7 +137,10 @@ func (tmpl *DialViewTemplate) Render(ctx context.Context, w io.Writer) {
 			<div class="card-header bg-light">
 				<div class="row flex-between-center">
 					<div class="col-6 col-sm-auto">
-						<h5 class="mb-0 py-2 py-xl-0">Set Your WTF Level</h5>
+						<h5 class="mb-0 py-2 py-xl-0">
+							Set Your WTF Level: 
+							<ego:WTFBadge DialMembershipID=selfMembership.ID Value=selfMembership.Value/>
+						</h5>
 					</div>
 				</div>
 			</div>
