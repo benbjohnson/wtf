@@ -31,12 +31,12 @@ var (
 	requestCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "wtf_http_request_count",
 		Help: "Total number of requests by route",
-	}, []string{"route"})
+	}, []string{"method", "path"})
 
 	requestSeconds = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "wtf_http_request_seconds",
 		Help: "Total amount of request time by route, in seconds",
-	}, []string{"route"})
+	}, []string{"method", "path"})
 )
 
 // ShutdownTimeout is the time given for outstanding requests to finish before shutdown.
@@ -378,8 +378,8 @@ func trackMetrics(next http.Handler) http.Handler {
 
 		// Track total time unless it is the WebSocket endpoint for events.
 		if tmpl != "" && tmpl != "/events" {
-			requestCount.WithLabelValues(tmpl).Inc()
-			requestSeconds.WithLabelValues(tmpl).Add(float64(time.Since(t).Seconds()))
+			requestCount.WithLabelValues(r.Method, tmpl).Inc()
+			requestSeconds.WithLabelValues(r.Method, tmpl).Add(float64(time.Since(t).Seconds()))
 		}
 	})
 }
