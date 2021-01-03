@@ -1,4 +1,4 @@
-WTF Dial ![test](https://github.com/benbjohnson/wtf/workflows/test/badge.svg)
+WTF Dial ![test](https://github.com/benbjohnson/wtf/workflows/test/badge.svg) ![deploy](https://github.com/benbjohnson/wtf/workflows/deploy/badge.svg)
 ========
 
 This project provides a real-time API for teams to view how f-cked up they 
