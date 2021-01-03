@@ -18,8 +18,8 @@ import (
 	"github.com/benbjohnson/wtf/http/html"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
-	//"github.com/prometheus/client_golang/prometheus"
-	//"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"golang.org/x/crypto/acme/autocert"
 	"golang.org/x/oauth2"
@@ -27,17 +27,17 @@ import (
 )
 
 // Generic HTTP metrics.
-//var (
-//	requestCount = promauto.NewCounterVec(prometheus.CounterOpts{
-//		Name: "wtf_http_request_count",
-//		Help: "Total number of requests by route",
-//	}, []string{"route"})
-//
-//	requestSeconds = promauto.NewCounterVec(prometheus.CounterOpts{
-//		Name: "wtf_http_request_seconds",
-//		Help: "Total amount of request time by route, in seconds",
-//	}, []string{"route"})
-//)
+var (
+	requestCount = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "wtf_http_request_count",
+		Help: "Total number of requests by route",
+	}, []string{"route"})
+
+	requestSeconds = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "wtf_http_request_seconds",
+		Help: "Total amount of request time by route, in seconds",
+	}, []string{"route"})
+)
 
 // ShutdownTimeout is the time given for outstanding requests to finish before shutdown.
 const ShutdownTimeout = 1 * time.Second
@@ -370,7 +370,7 @@ func loadFlash(next http.Handler) http.Handler {
 func trackMetrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Obtain path template & start time of request.
-		// t := time.Now()
+		t := time.Now()
 		tmpl := requestPathTemplate(r)
 
 		// Delegate to next handler in middleware chain.
@@ -378,8 +378,8 @@ func trackMetrics(next http.Handler) http.Handler {
 
 		// Track total time unless it is the WebSocket endpoint for events.
 		if tmpl != "" && tmpl != "/events" {
-			//requestCount.WithLabelValues(tmpl).Inc()
-			//requestSeconds.WithLabelValues(tmpl).Add(float64(time.Since(t).Seconds()))
+			requestCount.WithLabelValues(tmpl).Inc()
+			requestSeconds.WithLabelValues(tmpl).Add(float64(time.Since(t).Seconds()))
 		}
 	})
 }
@@ -546,6 +546,7 @@ func ListenAndServeTLSRedirect(domain string) error {
 
 // ListenAndServeDebug runs an HTTP server with /debug endpoints (e.g. pprof, vars).
 func ListenAndServeDebug() error {
-	http.Handle("/metrics", promhttp.Handler())
-	return http.ListenAndServe(":6060", nil)
+	h := http.NewServeMux()
+	h.Handle("/metrics", promhttp.Handler())
+	return http.ListenAndServe(":6060", h)
 }
