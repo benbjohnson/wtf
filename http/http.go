@@ -18,7 +18,7 @@ import (
 // Generic HTTP metrics.
 var (
 	errorCount = promauto.NewCounterVec(prometheus.CounterOpts{
-		Name: "litestream_http_error_count",
+		Name: "wtf_http_error_count",
 		Help: "Total number of errors by error code",
 	}, []string{"code"})
 )

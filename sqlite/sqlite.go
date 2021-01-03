@@ -22,17 +22,17 @@ import (
 // Database metrics.
 var (
 	userCountGauge = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "litestream_db_users",
+		Name: "wtf_db_users",
 		Help: "The total number of users",
 	})
 
 	dialCountGauge = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "litestream_db_dials",
+		Name: "wtf_db_dials",
 		Help: "The total number of dials",
 	})
 
 	dialMembershipCountGauge = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "litestream_db_dial_memberships",
+		Name: "wtf_db_dial_memberships",
 		Help: "The total number of dial memberships",
 	})
 )

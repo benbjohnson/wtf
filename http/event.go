@@ -14,7 +14,7 @@ import (
 // Websocket metrics.
 var (
 	websocketConnections = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "litestream_http_websocket_connections",
+		Name: "wtf_http_websocket_connections",
 		Help: "Total number of connected websocket users",
 	})
 )
