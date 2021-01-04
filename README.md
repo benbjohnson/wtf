@@ -1,7 +1,7 @@
 WTF Dial ![GitHub release](https://img.shields.io/github/v/release/benbjohnson/wtf) ![test](https://github.com/benbjohnson/wtf/workflows/test/badge.svg) ![deploy](https://github.com/benbjohnson/wtf/workflows/deploy/badge.svg)
 ========
 
-This project provides a real-time API for teams to view how f-cked up they 
+This project provides a real-time dashboard for teams to view how f-cked up they 
 currently are. Each team member provides input to specify the level at which
 they feel the team is currently messed up. These values range from 0% (meaning
 team feels there are no WTF situations) to 100% (meaning the members feel the
@@ -21,8 +21,9 @@ Go application. It can be used in several ways:
    projects but the goal here is to be as clear as possible for anyone reading
    the code.
 
-2. As a walkthrough—companion blog posts will be added that walk through the
-   various parts of the application and explain the design choices.
+2. As a walkthrough—companion blog posts will be added to the [Go Beyond](https://www.gobeyond.dev/)
+   web site that walk through the various parts of the application and explain the design choices.
+   You can find the initial blog post here: https://www.gobeyond.dev/wtf-dial/
 
 You can also see the project structure overview below to get a quick overview
 of the application structure.
