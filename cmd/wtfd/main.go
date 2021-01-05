@@ -320,10 +320,12 @@ func rollbarReportError(ctx context.Context, err error, args ...interface{}) {
 		rollbar.ClearPerson()
 	}
 
+	log.Printf("error: %v", err)
 	rollbar.Error(append([]interface{}{err}, args)...)
 }
 
 // rollbarReportPanic reports panics to rollbar.
 func rollbarReportPanic(err interface{}) {
+	log.Printf("panic: %v", err)
 	rollbar.LogPanic(err, true)
 }
