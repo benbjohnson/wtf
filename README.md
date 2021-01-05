@@ -24,6 +24,8 @@ Go application. It can be used in several ways:
 2. As a walkthrough—companion blog posts will be added to the [Go Beyond](https://www.gobeyond.dev/)
    web site that walk through the various parts of the application and explain the design choices.
    You can find the initial blog post here: https://www.gobeyond.dev/wtf-dial/
+   
+3. Ask questions in the [GitHub Discussions](https://github.com/benbjohnson/wtf/discussions) board.
 
 You can also see the project structure overview below to get a quick overview
 of the application structure.
