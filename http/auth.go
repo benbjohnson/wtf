@@ -106,9 +106,13 @@ func (s *Server) handleOAuthGitHubCallback(w http.ResponseWriter, r *http.Reques
 	)))
 
 	// Fetch user information for the currently authenticated user.
+	// Require that we at least receive a user ID from GitHub.
 	u, _, err := client.Users.Get(r.Context(), "")
 	if err != nil {
 		Error(w, r, fmt.Errorf("cannot fetch github user: %s", err))
+		return
+	} else if u.ID == nil {
+		Error(w, r, fmt.Errorf("user ID not returned by GitHub, cannot authenticate user"))
 		return
 	}
 
