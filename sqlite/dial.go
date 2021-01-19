@@ -307,7 +307,7 @@ func findDials(ctx context.Context, tx *Tx, filter wtf.DialFilter) (_ []*wtf.Dia
 		where = append(where, `(
 			id IN (SELECT dial_id FROM dial_memberships dm WHERE dm.user_id = ?)
 		)`)
-		args = append(args, userID, userID)
+		args = append(args, userID)
 	}
 
 	// Execue query with limiting WHERE clause and LIMIT/OFFSET injected.
