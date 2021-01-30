@@ -370,8 +370,10 @@ func createDial(ctx context.Context, tx *Tx, dial *wtf.Dial) error {
 	dial.CreatedAt = tx.now
 	dial.UpdatedAt = dial.CreatedAt
 
-	// Perform basic field validation.
+	// Perform basic field validation & ensure user exists.
 	if err := dial.Validate(); err != nil {
+		return err
+	} else if _, err := findUserByID(ctx, tx, dial.UserID); err != nil {
 		return err
 	}
 
