@@ -268,9 +268,11 @@ func createDialMembership(ctx context.Context, tx *Tx, membership *wtf.DialMembe
 	}
 
 	// Assign new database ID to the caller's arg.
-	if membership.ID, err = lastInsertID(result); err != nil {
+	id, err := result.LastInsertId()
+	if err != nil {
 		return err
 	}
+	membership.ID = int(id)
 
 	// Ensure computed parent dial value is up to date.
 	if err := refreshDialValue(ctx, tx, membership.DialID); err != nil {

@@ -397,9 +397,11 @@ func createDial(ctx context.Context, tx *Tx, dial *wtf.Dial) error {
 	}
 
 	// Read back new dial ID into caller argument.
-	if dial.ID, err = lastInsertID(result); err != nil {
+	id, err := result.LastInsertId()
+	if err != nil {
 		return err
 	}
+	dial.ID = int(id)
 
 	// Record initial value to history table.
 	if err := insertDialValue(ctx, tx, dial.ID, dial.Value, dial.CreatedAt); err != nil {

@@ -256,12 +256,6 @@ type Tx struct {
 	now time.Time
 }
 
-// lastInsertID is a helper function for reading the last inserted ID as an int.
-func lastInsertID(result sql.Result) (int, error) {
-	id, err := result.LastInsertId()
-	return int(id), err
-}
-
 // NullTime represents a helper wrapper for time.Time. It automatically converts
 // time fields to/from RFC 3339 format. Also supports NULL for zero time.
 type NullTime time.Time

@@ -247,9 +247,11 @@ func createUser(ctx context.Context, tx *Tx, user *wtf.User) error {
 		return FormatError(err)
 	}
 
-	if user.ID, err = lastInsertID(result); err != nil {
+	id, err := result.LastInsertId()
+	if err != nil {
 		return err
 	}
+	user.ID = int(id)
 
 	return nil
 }

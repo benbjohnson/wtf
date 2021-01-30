@@ -292,9 +292,11 @@ func createAuth(ctx context.Context, tx *Tx, auth *wtf.Auth) error {
 	}
 
 	// Update caller object to set ID.
-	if auth.ID, err = lastInsertID(result); err != nil {
+	id, err := result.LastInsertId()
+	if err != nil {
 		return err
 	}
+	auth.ID = int(id)
 
 	return nil
 }
