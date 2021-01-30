@@ -81,14 +81,6 @@ func (s *DialService) CreateDial(ctx context.Context, dial *wtf.Dial) error {
 	}
 	defer tx.Rollback()
 
-	// Assign dial to the current user.
-	// Return an error if the user is not currently logged in.
-	userID := wtf.UserIDFromContext(ctx)
-	if userID == 0 {
-		return wtf.Errorf(wtf.EUNAUTHORIZED, "You must be logged in to create a dial.")
-	}
-	dial.UserID = wtf.UserIDFromContext(ctx)
-
 	// Create dial and attach associated owner user.
 	if err := createDial(ctx, tx, dial); err != nil {
 		return err
@@ -359,6 +351,14 @@ func findDials(ctx context.Context, tx *Tx, filter wtf.DialFilter) (_ []*wtf.Dia
 
 // createDial creates a new dial.
 func createDial(ctx context.Context, tx *Tx, dial *wtf.Dial) error {
+	// Assign dial to the current user.
+	// Return an error if the user is not currently logged in.
+	userID := wtf.UserIDFromContext(ctx)
+	if userID == 0 {
+		return wtf.Errorf(wtf.EUNAUTHORIZED, "You must be logged in to create a dial.")
+	}
+	dial.UserID = wtf.UserIDFromContext(ctx)
+
 	// Generate a random invite code.
 	inviteCode := make([]byte, 16)
 	if _, err := io.ReadFull(rand.Reader, inviteCode); err != nil {
