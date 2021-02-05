@@ -328,7 +328,7 @@ func findDials(ctx context.Context, tx *Tx, filter wtf.DialFilter) (_ []*wtf.Dia
 	dials := make([]*wtf.Dial, 0)
 	for rows.Next() {
 		var dial wtf.Dial
-		if rows.Scan(
+		if err := rows.Scan(
 			&dial.ID,
 			&dial.UserID,
 			&dial.Name,
@@ -614,7 +614,7 @@ func findDialValueSlotsBetween(ctx context.Context, tx *Tx, id int, start, end t
 	// Iterate over rows and assign values to slots.
 	for rows.Next() {
 		var timestamp time.Time
-		if rows.Scan(&value, (*NullTime)(&timestamp)); err != nil {
+		if err := rows.Scan(&value, (*NullTime)(&timestamp)); err != nil {
 			return nil, err
 		}
 
