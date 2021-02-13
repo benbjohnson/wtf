@@ -114,10 +114,7 @@ A few smaller packages don't fall into the organization listed above:
 
 ## Development
 
-You can build `wtf` locally by cloning the repository and installing the 
-[ego](https://github.com/benbjohnson/ego) templating library.
-
-Then run:
+You can build `wtf` locally by cloning the repository, then run:
 
 ```sh
 $ make 

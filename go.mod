@@ -20,3 +20,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/oauth2 v0.0.0-20201109201403-9fd604954f58
 )
+
+// Build tools
+require github.com/benbjohnson/ego v0.4.1
