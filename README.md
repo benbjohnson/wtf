@@ -121,8 +121,12 @@ $ make
 $ go install ./cmd/...
 ```
 
-The `wtfd` server uses GitHub for authentication so you'll need to [create a 
-new GitHub OAuth App](https://github.com/settings/applications/new).
+The `wtfd` server uses GitHub for authentication so you'll need to [create a new
+GitHub OAuth App](https://github.com/settings/applications/new). Set the value
+of the authorization callback URL to `http://HOST[:PORT]/oauth/github/callback`,
+where `HOST[:PORT]` is the host name or IP address at which clients can access
+the `wtfd` server, with an optional port number (e.g. `localhost:3000` when
+running locally).
 
 Next, you'll need to setup a configuration file in `~/wtfd.conf`:
 
