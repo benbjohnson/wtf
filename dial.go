@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"unicode/utf8"
 )
 
 // Dial constants.
@@ -64,7 +65,7 @@ func (d *Dial) MembershipByUserID(userID int) *DialMembership {
 func (d *Dial) Validate() error {
 	if d.Name == "" {
 		return Errorf(EINVALID, "Dial name required.")
-	} else if len(d.Name) > MaxDialNameLen {
+	} else if utf8.RuneCountInString(d.Name) > MaxDialNameLen {
 		return Errorf(EINVALID, "Dial name too long.")
 	} else if d.UserID == 0 {
 		return Errorf(EINVALID, "Dial creator required.")
