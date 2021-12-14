@@ -215,7 +215,7 @@ func findAuths(ctx context.Context, tx *Tx, filter wtf.AuthFilter) (_ []*wtf.Aut
 	for rows.Next() {
 		var auth wtf.Auth
 		var expiry sql.NullString
-		if rows.Scan(
+		if err := rows.Scan(
 			&auth.ID,
 			&auth.UserID,
 			&auth.Source,

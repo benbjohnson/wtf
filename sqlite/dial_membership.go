@@ -200,7 +200,7 @@ func findDialMemberships(ctx context.Context, tx *Tx, filter wtf.DialMembershipF
 	for rows.Next() {
 		var dialUserID int
 		var membership wtf.DialMembership
-		if rows.Scan(
+		if err := rows.Scan(
 			&membership.ID,
 			&membership.DialID,
 			&membership.UserID,

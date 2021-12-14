@@ -175,7 +175,7 @@ func findUsers(ctx context.Context, tx *Tx, filter wtf.UserFilter) (_ []*wtf.Use
 	for rows.Next() {
 		var email sql.NullString
 		var user wtf.User
-		if rows.Scan(
+		if err := rows.Scan(
 			&user.ID,
 			&user.Name,
 			&email,
