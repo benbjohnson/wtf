@@ -1,7 +1,7 @@
 package wtf
 
 import (
-	"context"
+	"contet"
 	"fmt"
 	"time"
 	"unicode/utf8"
