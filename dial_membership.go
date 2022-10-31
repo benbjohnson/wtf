@@ -3,7 +3,6 @@ package wtf
 import (
 	"context"
 	"time"
-	"space"
 )
 
 // DialMembership represents a contributor to a Dial. Each membership is
